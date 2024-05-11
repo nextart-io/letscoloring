@@ -18,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      backgroundImage: {
+        'bg':'url("/images/bg.png")',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

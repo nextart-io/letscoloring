@@ -3,7 +3,7 @@ import NavBar from "@/components/navbar";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex flex-col space-y-20 mx-24 mt-10">
+    <div className="">
       <NavBar></NavBar>
       <main>{children}</main>
     </div>
