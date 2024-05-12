@@ -11,6 +11,7 @@ import {
 } from "@mysten/dapp-kit";
 import { getFullnodeUrl } from "@mysten/sui.js/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trueTheme } from "../theme/trueTheme";
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
@@ -29,10 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-bg bg-cover">
+      <body className="bg-bg bg-cover bg-no-repeat h-screen">
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networkConfig} defaultNetwork="localnet">
-            <WalletProvider>{children}</WalletProvider>
+            <WalletProvider theme={trueTheme}>{children}</WalletProvider>
           </SuiClientProvider>
         </QueryClientProvider>
       </body>

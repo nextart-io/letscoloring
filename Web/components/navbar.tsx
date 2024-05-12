@@ -1,17 +1,20 @@
 'use client';
 
-import { ConnectButton } from "@mysten/dapp-kit";
+import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
 
 const NavBar = () => {
+  const account = useCurrentAccount();
   return (
-    <nav className="flex p-6 border-4 rounded-3xl border-foreground">
-      <aside className="font-bold basis-1/4">
-        <h1 className="text-4xl">{"Let's Coloring !!!"}</h1>
-      </aside>
-      <div className="ml-auto">
-        <ConnectButton />
+    <div className="w-full flex justify-end">
+      <div className="flex w-1/4 flex-col">
+        <nav className="flex items-center m-5 p-2 rounded-3xl bg-red-100">
+          <div className="ml-auto">
+            <ConnectButton />
+          </div>
+        </nav>
+        <div className="h-96 bg-red-100 rounded-3xl m-5"></div>
       </div>
-    </nav>
+    </div>
   );
 };
 

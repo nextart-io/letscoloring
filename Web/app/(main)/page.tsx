@@ -1,8 +1,9 @@
 import Image from "next/image";
+import ScreenElements from "@/components/screenElements";
 const MainPage = () => {
   return (
     <div className="flex justify-center">
-        <Image src={"/images/Tothemoon.png"} alt={""} width={"600"} height={"600"}></Image>
+        <ScreenElements />
     </div>
   );
 };

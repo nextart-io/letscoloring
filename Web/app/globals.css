@@ -1,8 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Skranji:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+   html {
+    font-family:'Skranji', Courier, monospace;
+   }
   :root {
     --background: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;

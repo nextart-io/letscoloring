@@ -15,6 +15,7 @@
 
 # production
 /Web/build
+/letscoloring/build
 
 # misc
 .DS_Store
