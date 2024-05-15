@@ -46,6 +46,7 @@ module letscoloring::coloring{
     public struct RecordTicketInfo has key, store {
         id: UID,
         users: Table<address,ID>,
+
     }
 
     public struct Grid has copy, store, drop {
@@ -183,14 +184,15 @@ module letscoloring::coloring{
 
         let game_coin = coin::split(token, game.payment, ctx);
         balance::join<SUI>(&mut game.total_reward, coin::into_balance(game_coin));
-
+        
         let grid_bm = borrow_mut_grid(game, row, col);
         set_grid_filled(grid_bm);
         set_grid_color(grid_bm, string::utf8(new_color));
         set_player(game, row, col, ctx);
     }
 
-    fun creat_ticket(ticket_info: &mut RecordTicketInfo, ctx: &mut TxContext): Ticket {
+
+    fun create_ticket(ticket_info:&mut RecordTicketInfo,ctx:&mut TxContext):Ticket{
         let ticket = Ticket{
             id: object::new(ctx),
             name: string::utf8(b"Let's Coloring Ticket"),
@@ -329,9 +331,15 @@ module letscoloring::coloring{
         table::drop<address, u64>(min_color_player_cnt);
     }
 
+    fun game_end(game:&mut Game){
+
+    }
+
+
     //test
     #[test_only]
     public fun init_for_testing(ctx:&mut TxContext){
-        init(ctx);
+        let otw = COLORING{};
+        init(otw,ctx);
     }
 }
