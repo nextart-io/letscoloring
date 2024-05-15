@@ -1,6 +1,5 @@
 "use client";
 
-
 import "@mysten/dapp-kit/dist/index.css";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -17,6 +16,7 @@ import { trueTheme } from "../theme/trueTheme";
 const { networkConfig } = createNetworkConfig({
   localnet: { url: getFullnodeUrl("localnet") },
   mainnet: { url: getFullnodeUrl("mainnet") },
+  testnet: { url: getFullnodeUrl("testnet") },
 });
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,7 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-bg bg-cover bg-no-repeat h-screen">
         <QueryClientProvider client={queryClient}>
-          <SuiClientProvider networks={networkConfig} defaultNetwork="localnet">
+          <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
             <WalletProvider theme={trueTheme}>{children}</WalletProvider>
           </SuiClientProvider>
         </QueryClientProvider>
