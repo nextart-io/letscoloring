@@ -15,6 +15,13 @@ module letscoloring::coloring{
     const EGridAlreadyFilled:u64 = 2;
     const ENotEnoughToken:u64 =3;
 
+    //Events
+    public struct GameCreateEvents has copy,drop{
+        game_object_address:address,
+        index:u64,
+        payment:u64,
+    }
+
     public struct COLORING has drop{}
 
     public struct Game_Manager has key,store{
@@ -30,11 +37,8 @@ module letscoloring::coloring{
         grids:vector<Grid>,
         total_reward:Balance<SUI>,
         reward_by_ticket:Table<ID,Balance<SUI>>,
-        ticket_grids_table:Table<ID,vector<address>>
-    }
-
-    public struct GameEvent<T> has copy,drop {
-        data:T
+        ticket_grids_table:Table<ID,vector<address>>,
+        color_table:Table<vector<u8>,u8>,
     }
 
     public struct Ticket has key {
@@ -103,12 +107,17 @@ module letscoloring::coloring{
             grids:grids,
             total_reward:balance::zero(),
             reward_by_ticket:table::new<ID,Balance<SUI>>(ctx),
-            ticket_grids_table:table::new<ID,vector<address>>(ctx)
+            ticket_grids_table:table::new<ID,vector<address>>(ctx),
+            color_table:table::new<vector<u8>,u8>(ctx),
         };
-
+        
         gm.game_count = gm.game_count+1;
         vector::push_back(&mut gm.games,object::uid_to_inner(&game.id));
-
+        event::emit(GameCreateEvents{
+            game_object_address:object::uid_to_address(&game.id),
+            index:gm.game_count,
+            payment:payment,
+        });
         transfer::share_object(game);
     }
     //User
@@ -131,7 +140,7 @@ module letscoloring::coloring{
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users,sender)){
-            let ticket = creat_ticket(ticket_info,ctx);  
+            let ticket = create_ticket(ticket_info,ctx);  
             //add ticket and sender info to RecordTicketInfo
             table::add(&mut ticket_info.users,sender,object::uid_to_inner(&ticket.id));
             //initialize the game.ticket_grids_table table
@@ -148,6 +157,13 @@ module letscoloring::coloring{
         //borrow ticket_grids_table table by using ticket_id
         let game_grid_ticket_table = table::borrow_mut(&mut game.ticket_grids_table,object::id_from_address(ticket_address));
         //add filled_grid_address to game_grid_ticket_table
+        if(table::contains(&game.color_table,new_color)){
+            let value = table::borrow_mut(&mut game.color_table,new_color);
+            *value = *value + 1;         
+        }else{
+            table::add(&mut game.color_table,new_color,0);
+        };
+
         vector::push_back(game_grid_ticket_table,filled_grid_address);
     }
 
@@ -158,7 +174,7 @@ module letscoloring::coloring{
         balance::join<SUI>(&mut game.total_reward,coin::into_balance(game_coin));
     }
 
-    fun creat_ticket(ticket_info:&mut RecordTicketInfo,ctx:&mut TxContext):Ticket{
+    fun create_ticket(ticket_info:&mut RecordTicketInfo,ctx:&mut TxContext):Ticket{
         let ticket = Ticket{
             id:object::new(ctx),
             name:string::utf8(b"Let's Coloring Ticket"),
@@ -182,6 +198,7 @@ module letscoloring::coloring{
     //test
     #[test_only]
     public fun init_for_testing(ctx:&mut TxContext){
-        init(ctx);
+        let otw = COLORING{};
+        init(otw,ctx);
     }
 }
