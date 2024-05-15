@@ -14,6 +14,7 @@ module letscoloring::coloring{
     const ENotEligible:u64 = 1;
     const EGridAlreadyFilled:u64 = 2;
     const ENotEnoughToken:u64 =3;
+    const EGameEnded:u64 = 4;
 
     //Events
     public struct GameCreateEvents has copy,drop{
@@ -32,7 +33,9 @@ module letscoloring::coloring{
 
     public struct Game has key,store{
         id:UID,
-        index:u64,
+        is_game_end:bool,
+        generated_index:u64,
+        filled_index:u64,
         payment:u64,
         grids:vector<Grid>,
         total_reward:Balance<SUI>,
@@ -102,7 +105,9 @@ module letscoloring::coloring{
         
        let game = Game {
             id:new_game_id,
-            index:gm.game_count,
+            generated_index:gm.game_count,
+            is_game_end:false,
+            filled_index:0,
             payment:payment,
             grids:grids,
             total_reward:balance::zero(),
@@ -137,6 +142,7 @@ module letscoloring::coloring{
     new_color:vector<u8>,
     ticket_info:&mut RecordTicketInfo,
     ctx:&mut TxContext){
+        assert!(game.is_game_end,EGameEnded);
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users,sender)){
@@ -162,9 +168,18 @@ module letscoloring::coloring{
             *value = *value + 1;         
         }else{
             table::add(&mut game.color_table,new_color,0);
-        };
+        };       
+
+        //todo Events
 
         vector::push_back(game_grid_ticket_table,filled_grid_address);
+
+        game.filled_index = game.filled_index + 1;
+
+        if(game.filled_index == game.generated_index){
+            game.is_game_end = true;
+            game_end(game);
+        };
     }
 
     fun payment(game:&mut Game,token:&mut Coin<SUI>,ctx:&mut TxContext){
@@ -194,6 +209,11 @@ module letscoloring::coloring{
         game_grid.color = string::utf8(new_color);
         object::uid_to_address(&game_grid.id)
     }
+
+    fun game_end(game:&mut Game){
+
+    }
+
 
     //test
     #[test_only]
