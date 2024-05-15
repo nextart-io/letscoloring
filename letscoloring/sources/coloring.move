@@ -174,7 +174,7 @@ module letscoloring::coloring{
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users, sender)){
-            let ticket = creat_ticket(ticket_info, ctx);            
+            let ticket = create_ticket(ticket_info, ctx);            
             transfer::transfer(ticket, sender);
         };
         assert!(game.cnt > 0, EGameEnded);
