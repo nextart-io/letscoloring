@@ -8,23 +8,19 @@ module letscoloring::coloring{
     use std::string::{String,Self};
     use sui::url;
     use sui::table::{Self,Table};
+    use sui::event;
     
     //Error
     const ENotEligible:u64 = 1;
     const EGridAlreadyFilled:u64 = 2;
     const ENotEnoughToken:u64 =3;
 
-    //Sturct
-    public struct AdminCap has key {
-        id:UID
-    }
-
     public struct COLORING has drop{}
 
     public struct Game_Manager has key,store{
         id:UID,
         game_count:u64,
-        games:vector<address>,
+        games:vector<ID>,
     }
 
     public struct Game has key,store{
@@ -33,8 +29,12 @@ module letscoloring::coloring{
         payment:u64,
         grids:vector<Grid>,
         total_reward:Balance<SUI>,
-        reward_by_ticket:Table<address,Balance<SUI>>,
-        grid_filled_by_ticket:Table<address,address>
+        reward_by_ticket:Table<ID,Balance<SUI>>,
+        ticket_grids_table:Table<ID,vector<address>>
+    }
+
+    public struct GameEvent<T> has copy,drop {
+        data:T
     }
 
     public struct Ticket has key {
@@ -43,12 +43,13 @@ module letscoloring::coloring{
         description:String,
         link:String,
         url:Url,
+        //need a talbe to filter whether got rewards
     }
 
     //record ticket info for further activity
     public struct RecordTicketInfo has key,store{
         id:UID,
-        users:Table<address,address>,
+        users:Table<address,ID>,
     }
 
     public struct Grid has key,store {
@@ -70,7 +71,7 @@ module letscoloring::coloring{
 
         transfer::share_object(RecordTicketInfo{
             id:object::new(ctx),
-            users:table::new<address,address>(ctx),
+            users:table::new<address,ID>(ctx),
         });
         transfer::public_transfer(gm,ctx.sender());
         transfer::public_transfer(publisher,ctx.sender());
@@ -101,13 +102,12 @@ module letscoloring::coloring{
             payment:payment,
             grids:grids,
             total_reward:balance::zero(),
-            reward_by_ticket:table::new<address,Balance<SUI>>(ctx),
-            grid_filled_by_ticket:table::new<address,address>(ctx)
-
+            reward_by_ticket:table::new<ID,Balance<SUI>>(ctx),
+            ticket_grids_table:table::new<ID,vector<address>>(ctx)
         };
 
         gm.game_count = gm.game_count+1;
-        vector::push_back(&mut gm.games,object::uid_to_address(&game.id));
+        vector::push_back(&mut gm.games,object::uid_to_inner(&game.id));
 
         transfer::share_object(game);
     }
@@ -115,8 +115,8 @@ module letscoloring::coloring{
     #[allow(lint(self_transfer))]
     public fun claim_all_by_tickt(ticket:&Ticket,game:&mut Game,ctx:&mut TxContext){
         //check weather ticke is match game
-        assert!(table::contains(&game.reward_by_ticket,object::uid_to_address(&ticket.id)),ENotEligible);
-        let reward_balance = table::remove(&mut game.reward_by_ticket,object::uid_to_address(&ticket.id));
+        assert!(table::contains(&game.reward_by_ticket,object::uid_to_inner(&ticket.id)),ENotEligible);
+        let reward_balance = table::remove(&mut game.reward_by_ticket,object::uid_to_inner(&ticket.id));
         let coin = coin::from_balance<SUI>(reward_balance,ctx);
         transfer::public_transfer(coin,ctx.sender());
     }
@@ -131,12 +131,24 @@ module letscoloring::coloring{
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users,sender)){
-            let ticket = creat_ticket(ticket_info,ctx);            
-            transfer::transfer(ticket,sender);
+            let ticket = creat_ticket(ticket_info,ctx);  
+            //add ticket and sender info to RecordTicketInfo
+            table::add(&mut ticket_info.users,sender,object::uid_to_inner(&ticket.id));
+            //initialize the game.ticket_grids_table table
+            table::add(&mut game.ticket_grids_table,object::uid_to_inner(&ticket.id),vector::empty<address>());
+                      
+            transfer::transfer(ticket,sender);            
         };
+        
         payment(game,token,ctx);
+        // executed change_grid_color and get the changed grid ID
         let filled_grid_address = change_grid_color(game,grid,new_color);
-        table::add(&mut game.grid_filled_by_ticket,sender,filled_grid_address);
+        //take ticket address from sender
+        let ticket_address = object::id_to_address(table::borrow(&ticket_info.users,sender));
+        //borrow ticket_grids_table table by using ticket_id
+        let game_grid_ticket_table = table::borrow_mut(&mut game.ticket_grids_table,object::id_from_address(ticket_address));
+        //add filled_grid_address to game_grid_ticket_table
+        vector::push_back(game_grid_ticket_table,filled_grid_address);
     }
 
     fun payment(game:&mut Game,token:&mut Coin<SUI>,ctx:&mut TxContext){
@@ -154,7 +166,7 @@ module letscoloring::coloring{
             link:string::utf8(b"https://nextheater.xyz"),
             url:url::new_unsafe_from_bytes(b"https://blush-left-firefly-321.mypinata.cloud/ipfs/QmbLCxFoe9E55vgB9m4HFYeq1rxYa3wm5RDKY3tKSPwXc4"),
         };
-        table::add(&mut ticket_info.users,ctx.sender(),object::uid_to_address(&ticket.id));            
+        table::add(&mut ticket_info.users,ctx.sender(),object::uid_to_inner(&ticket.id));            
         ticket
     }
 
