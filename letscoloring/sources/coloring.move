@@ -9,12 +9,19 @@ module letscoloring::coloring{
     use sui::url;
     use sui::table::{Self, Table};
     use sui::table_vec::{Self, TableVec};
+    use sui::event;
     
     //Error
     const ENotEnd: u64 = 0;
     const EGridAlreadyFilled: u64 = 1;
     const EOutOfRange: u64 = 2;
     const EGameEnded: u64 = 3;
+    const EIllegalColor:u64 = 4;
+
+    //Events
+    public struct GameCreateEvent has copy, drop {
+        game_address:address,
+    }
 
     public struct COLORING has drop{}
 
@@ -30,6 +37,7 @@ module letscoloring::coloring{
         rows: u64,
         cols: u64,
         cnt: u64,
+        colors:vector<vector<u8>>,
         grids: vector<vector<Grid>>,
         total_reward: Balance<SUI>,
         grid_player: vector<vector<address>>,
@@ -79,6 +87,7 @@ module letscoloring::coloring{
         payment: u64, 
         rows: u64,
         cols: u64,
+        colors:vector<vector<u8>>,
         ctx: &mut TxContext
     ) {
         let mut grids_2d = vector::empty<vector<Grid>>();
@@ -109,6 +118,7 @@ module letscoloring::coloring{
             rows,
             cols,
             cnt: rows * cols,
+            colors,
             grids: grids_2d,
             total_reward: balance::zero(),
             grid_player: addr_2d,
@@ -116,6 +126,9 @@ module letscoloring::coloring{
 
         gm.game_count = gm.game_count + 1;
         table_vec::push_back<ID>(&mut gm.games, object::id(&game));
+        event::emit(GameCreateEvent{
+            game_address:object::uid_to_address(&game.id),
+        });
         transfer::share_object(game);
     }
 
@@ -172,12 +185,14 @@ module letscoloring::coloring{
         ticket_info:&mut RecordTicketInfo,
         ctx:&mut TxContext
     ) {
+        assert!(!vector::contains(&game.colors,&new_color),EIllegalColor);
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users, sender)){
             let ticket = create_ticket(ticket_info, ctx);            
             transfer::transfer(ticket, sender);
         };
+        game.cnt = game.cnt - 1;
         assert!(game.cnt > 0, EGameEnded);
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let grid_b = borrow_grid(game, row, col);
@@ -198,7 +213,7 @@ module letscoloring::coloring{
             id: object::new(ctx),
             name: string::utf8(b"Let's Coloring Ticket"),
             description:string::utf8(b"Early-stage activity for NexTheater"),
-            link:string::utf8(b"https://nextheater.xyz"),
+            link:string::utf8(b"https://coloring.nextheater.xyz"),
             url:url::new_unsafe_from_bytes(b"https://blush-left-firefly-321.mypinata.cloud/ipfs/QmbLCxFoe9E55vgB9m4HFYeq1rxYa3wm5RDKY3tKSPwXc4"),
         };
         table::add(&mut ticket_info.users, ctx.sender(), object::id(&ticket));            
@@ -331,10 +346,6 @@ module letscoloring::coloring{
         table::drop<String, u64>(color_cnt);
         table::drop<address, u64>(max_color_player_cnt);
         table::drop<address, u64>(min_color_player_cnt);
-    }
-
-    fun game_end(game:&mut Game){
-
     }
 
 
