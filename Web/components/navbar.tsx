@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
 
@@ -12,7 +12,14 @@ const NavBar = () => {
             <ConnectButton />
           </div>
         </nav>
-        <div className="h-96 bg-red-100 rounded-3xl m-5"></div>
+        <div
+          className="h-96 bg-red-100 rounded-3xl m-5 px-5 py-5 text-lg tracking-widest"
+          style={{ color: "#ff9800" }}
+        >
+          <p>1.choise a gird</p>
+          <p>2.pick a color you love</p>
+          <p>3.wait and get youreward</p>
+        </div>
       </div>
     </div>
   );
