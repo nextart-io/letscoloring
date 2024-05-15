@@ -1,18 +1,18 @@
 module letscoloring::coloring{
-    use sui::coin;
+    use sui::coin::{Self,Coin};
     use sui::sui::SUI;
     use sui::url::{Url};
     use sui::balance::{Self, Balance};
     use sui::package;
     use sui::display;
     use std::string::{String,Self};
-    use sui::dynamic_field as df;
     use sui::url;
     use sui::table::{Self,Table};
     
     //Error
     const ENotEligible:u64 = 1;
     const EGridAlreadyFilled:u64 = 2;
+    const ENotEnoughToken:u64 =3;
 
     //Sturct
     public struct AdminCap has key {
@@ -24,7 +24,6 @@ module letscoloring::coloring{
     public struct Game_Manager has key,store{
         id:UID,
         game_count:u64,
-        income:Balance<SUI>,
         games:vector<address>,
     }
 
@@ -36,13 +35,6 @@ module letscoloring::coloring{
         total_reward:Balance<SUI>,
         reward_by_ticket:Table<address,Balance<SUI>>,
         grid_filled_by_ticket:Table<address,address>
-    }
-
-    //record each activity by ticket, bonding to a specific game by game id
-    public struct GameInfo has drop,copy,store{
-        ticket:address,
-        total_reward:u64,
-        grid:vector<address>,
     }
 
     public struct Ticket has key {
@@ -73,7 +65,6 @@ module letscoloring::coloring{
         let gm = Game_Manager {
             id:object::new(ctx),
             game_count:0,
-            income:balance::zero(),
             games:vector::empty()
         };
 
@@ -98,7 +89,7 @@ module letscoloring::coloring{
                 game:object::uid_to_address(&new_game_id),
                 filled:false,
                 index:i,
-                color: string::utf8(b"000000")
+                color: string::utf8(b"255255255")
             };
             vector::push_back(&mut grids, grid);
             i = i + 1;
@@ -133,6 +124,7 @@ module letscoloring::coloring{
     public fun fill_grid(
     game:&mut Game,
     grid:&Grid,
+    token:&mut Coin<SUI>,
     new_color:vector<u8>,
     ticket_info:&mut RecordTicketInfo,
     ctx:&mut TxContext){
@@ -142,8 +134,16 @@ module letscoloring::coloring{
             let ticket = creat_ticket(ticket_info,ctx);            
             transfer::transfer(ticket,sender);
         };
+        payment(game,token,ctx);
         let filled_grid_address = change_grid_color(game,grid,new_color);
         table::add(&mut game.grid_filled_by_ticket,sender,filled_grid_address);
+    }
+
+    fun payment(game:&mut Game,token:&mut Coin<SUI>,ctx:&mut TxContext){
+        let value = coin::value(token);
+        assert!(value>game.payment,ENotEnoughToken);
+        let game_coin = coin::split(token, game.payment,ctx);
+        balance::join<SUI>(&mut game.total_reward,coin::into_balance(game_coin));
     }
 
     fun creat_ticket(ticket_info:&mut RecordTicketInfo,ctx:&mut TxContext):Ticket{
