@@ -11,6 +11,7 @@ module letscoloring::coloring{
     use sui::table_vec::{Self, TableVec};
     
     //Error
+    const ENotEnd: u64 = 0;
     const EGridAlreadyFilled: u64 = 1;
     const EOutOfRange: u64 = 2;
     const EGameEnded: u64 = 3;
@@ -206,6 +207,7 @@ module letscoloring::coloring{
 
     #[allow(lint(self_transfer))]
     public fun settlement(game: &mut Game, ctx: &mut TxContext) {
+        assert!(game.cnt == 0, ENotEnd);
         let rows = game.rows;
         let cols = game.cols;
 
