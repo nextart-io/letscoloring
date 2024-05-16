@@ -44,7 +44,7 @@ export const StartNewGame = (payment: string, rows: string, cols: string, color:
         ctx:&mut TxContext
     )
 */
-export const FillGrid = (game:string,payment:string,row:string,col:string,new_color:string)=>{
+export const FillGrid = (game:string,payment:string,row:string,col:string,new_color:string,address:string)=>{
     const txb = new TransactionBlock();
     let [coin] = txb.splitCoins(txb.gas,[payment])
     txb.moveCall({
@@ -54,11 +54,11 @@ export const FillGrid = (game:string,payment:string,row:string,col:string,new_co
             txb.object(coin),
             txb.pure.u64(row),
             txb.pure.u64(col),
-            txb.pure(stringToUint8Array(new_color)),
+            txb.pure(bcs.string().serialize(new_color).toBytes().toString()),
             txb.object(Rt)
         ]
     })
-
+    txb.transferObjects([coin],address);
     return txb;
 }
 /*

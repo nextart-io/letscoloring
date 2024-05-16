@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { map } from "lodash";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { useSignAndExecuteTransactionBlock } from "@mysten/dapp-kit";
+import { useAccounts, useCurrentAccount, useSignAndExecuteTransactionBlock } from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
 import { getGameInfo, FillGrid } from "@/api";
 import { unit8Array2String } from "@/lib/utils";
@@ -38,6 +38,8 @@ function ColorGrid() {
   const { mutate: signAndExecuteTransactionBlock } =
     useSignAndExecuteTransactionBlock();
 
+  const currentAccount = useCurrentAccount();
+
   const client = new SuiClient({ url: getFullnodeUrl("testnet") });
   const gameId =
     "0xda9f33ef073fec0ea3d97799ec158cd2d80fb3097b8e918571c69002067b9676";
@@ -60,7 +62,8 @@ function ColorGrid() {
         "1000000000",
         `${row}`,
         `${col}`,
-        value
+        value,
+        currentAccount?.address!
       );
 
       // const dryrunRes = await client.dryRunTransactionBlock({
