@@ -20,7 +20,23 @@ module letscoloring::coloring{
 
     //Events
     public struct GameCreateEvent has copy, drop {
-        game_address:address,
+        game_address: address,
+    }
+
+    public struct RewardEvent has copy, drop {
+        game: ID,
+        player: address,
+        reward_value: u64,
+        color_type: String,
+        color: String,
+        count: u64,
+    }
+
+    public struct SettleGameEvent has copy, drop {
+        game: ID,
+        total_reward: u64,
+        max_color: String,
+        min_color: String,
     }
 
     public struct COLORING has drop{}
@@ -212,9 +228,9 @@ module letscoloring::coloring{
         let ticket = Ticket{
             id: object::new(ctx),
             name: string::utf8(b"Let's Coloring Ticket"),
-            description:string::utf8(b"Early-stage activity for NexTheater"),
-            link:string::utf8(b"https://coloring.nextheater.xyz"),
-            url:url::new_unsafe_from_bytes(b"https://blush-left-firefly-321.mypinata.cloud/ipfs/QmbLCxFoe9E55vgB9m4HFYeq1rxYa3wm5RDKY3tKSPwXc4"),
+            description: string::utf8(b"Early-stage activity for NexTheater"),
+            link: string::utf8(b"https://coloring.nextheater.xyz"),
+            url: url::new_unsafe_from_bytes(b"https://blush-left-firefly-321.mypinata.cloud/ipfs/QmbLCxFoe9E55vgB9m4HFYeq1rxYa3wm5RDKY3tKSPwXc4"),
         };
         table::add(&mut ticket_info.users, ctx.sender(), object::id(&ticket));            
         ticket
@@ -314,6 +330,13 @@ module letscoloring::coloring{
 
         let total_reward = balance::value<SUI>(&game.total_reward);
 
+        event::emit(SettleGameEvent{
+            game: object::id(game),
+            total_reward,
+            max_color: color_max,
+            min_color: color_min,
+        });
+
         len = max_player_vec.length();
         i = 0;
         while (i < len) {
@@ -321,6 +344,14 @@ module letscoloring::coloring{
             let cur_player_cnt = *table::borrow<address, u64>(&max_color_player_cnt, player);
             let reward_value: u64 = total_reward * 7 * cur_player_cnt / (10 * max_player_cnt);
             let reward = coin::take<SUI>(&mut game.total_reward, reward_value, ctx);
+            event::emit(RewardEvent {
+                game: object::id(game),
+                player,
+                reward_value,
+                color_type: string::utf8(b"MAX"),
+                color: color_max,
+                count: cur_player_cnt,
+            });
             transfer::public_transfer(reward, player);
             i = i + 1;
         };
@@ -332,6 +363,14 @@ module letscoloring::coloring{
             let cur_player_cnt = *table::borrow<address, u64>(&min_color_player_cnt, player);
             let reward_value: u64 = total_reward * 3 * cur_player_cnt / (10 * min_player_cnt);
             let reward = coin::take<SUI>(&mut game.total_reward, reward_value, ctx);
+            event::emit(RewardEvent {
+                game: object::id(game),
+                player,
+                reward_value,
+                color_type: string::utf8(b"MIN"),
+                color: color_min,
+                count: cur_player_cnt,
+            });
             transfer::public_transfer(reward, player);
             i = i + 1;
         };
