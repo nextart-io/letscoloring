@@ -11,8 +11,17 @@ export const unit8Array2String = (uint8Array:Uint8Array):string =>{
 }
 
 export const stringToUint8Array = (str: string): Uint8Array => {
-  const encoder = new TextEncoder();
-  return encoder.encode(str);
+    // Split the string into an array of string numbers
+    const strArray = str.split(',');
+
+    // Convert each string number to a Number
+    const numArray = strArray.map(Number);
+  
+    // Create a Uint8Array from the number array
+    const uint8Array = new Uint8Array(numArray);
+  
+    return uint8Array;
 };
+
 
 
