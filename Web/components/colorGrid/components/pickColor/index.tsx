@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { colorConfig } from "@/lib/config";
 
 interface PickColorProps {
+  pickColors: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   changeColor: (color: string) => void;
@@ -23,7 +24,7 @@ function PickColor(props: PickColorProps) {
         <CirclePicker
           width="324px"
           circleSize={40}
-          colors={keys(colorConfig)}
+          colors={props.pickColors}
           onChange={handleColorChange}
         />
       </DialogContent>

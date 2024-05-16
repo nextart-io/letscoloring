@@ -50,16 +50,17 @@ function StartGame() {
       },
       {
         onSuccess: (res) => {
-          console.log(res);
           const { effects } = res;
 
           showToast("Lets Gaming !");
 
-          //   getGameInfo(client, effects.created[1].reference.objectId).then(
-          //     (res2) => {
-          //       console.log(res2);
-          //     }
-          //   );
+          if (effects && effects.created && effects.created.length > 1) {
+            getGameInfo(client, effects?.created[1].reference.objectId).then(
+              (res2) => {
+                console.log(res2);
+              }
+            );
+          }
         },
         onError: (err) => {
           showToast("Tx Failed!");
