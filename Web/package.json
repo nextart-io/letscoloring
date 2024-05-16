@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mysten/bcs": "^0.11.1",
     "@mysten/dapp-kit": "^0.12.9",
     "@mysten/sui.js": "^0.51.2",
     "@radix-ui/react-dialog": "^1.0.5",
