@@ -3,10 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { map } from "lodash";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { useAccounts, useCurrentAccount, useSignAndExecuteTransactionBlock } from "@mysten/dapp-kit";
+import {
+  useAccounts,
+  useCurrentAccount,
+  useSignAndExecuteTransactionBlock,
+} from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
 import { getGameInfo, FillGrid } from "@/api";
-import { unit8Array2String } from "@/lib/utils";
+import { unit8Array2String, stringToUint8Array } from "@/lib/utils";
 import ColorItem from "./components/colorItem";
 import PickColor from "./components/pickColor";
 import styles from "./index.module.css";
@@ -54,8 +58,6 @@ function ColorGrid() {
     if (pickIndex) {
       const row = pickIndex[0];
       const col = pickIndex[1];
-
-      console.log(gameId, "1000000000", `${row}`, `${col}`, value);
 
       const txb: any = FillGrid(
         gameId,
@@ -118,10 +120,15 @@ function ColorGrid() {
         return unit8Array2String(arr);
       });
       // 格子颜色
+
       const gridsColors = map(gridsObject, (row) => {
         return map(row, (item: { fields: { color: string } }) => {
           const colorValue = item.fields.color;
-          return `#${colorValue}`;
+          if (colorValue === "FFFFFF") {
+            return `#${colorValue}`;
+          }
+
+          return unit8Array2String(stringToUint8Array(colorValue)).substring(1);
         });
       });
 
