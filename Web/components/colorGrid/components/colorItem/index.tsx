@@ -26,7 +26,7 @@ function ColorItem({ color, children, openPickColor }: ColorItemProps) {
     }
     // 已被选
     if (color) {
-      showToast("has been choised!");
+      showToast("has been choised !");
       return;
     }
 

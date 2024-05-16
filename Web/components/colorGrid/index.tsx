@@ -9,7 +9,7 @@ import styles from "./index.module.css";
 function ColorGrid() {
   const [openColor, setOpenColor] = useState(false);
   const [colorList, setColorList] = useState<string[]>(new Array(25).fill(""));
-  const [pickIndex, setPickIndex] = useState<any>();
+  const [pickIndex, setPickIndex] = useState<number>();
 
   const openPickColor = (color: string, value: number) => {
     // TODO: 选过之后不能再选
@@ -25,9 +25,11 @@ function ColorGrid() {
 
   // 选中颜色
   const changeColor = (value: string) => {
-    const newArray = cloneDeep(colorList);
-    newArray[pickIndex] = value;
-    setColorList(newArray);
+    if (typeof pickIndex === "number") {
+      const newArray = cloneDeep(colorList);
+      newArray[pickIndex] = value;
+      setColorList(newArray);
+    }
     setOpenColor(false);
   };
 
