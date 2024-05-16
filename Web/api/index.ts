@@ -1,4 +1,5 @@
-import { bcs } from "@mysten/bcs";
+import { stringToUint8Array } from "@/lib/utils";
+import { bcs} from "@mysten/bcs";
 import { GetObjectParams, SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions"
 
@@ -49,12 +50,12 @@ export const FillGrid = (game:string,payment:string,row:string,col:string,new_co
     txb.moveCall({
         target:`${Package}::coloring::fill_grid`,
         arguments:[
-            txb.object(`${game}`),
-            txb.object(`${coin}`),
+            txb.object(game),
+            txb.object(coin),
             txb.pure.u64(row),
             txb.pure.u64(col),
-            txb.pure(bcs.string().serialize(new_color)),
-            txb.object(`${Rt}`)
+            txb.pure(stringToUint8Array(new_color)),
+            txb.object(Rt)
         ]
     })
 
