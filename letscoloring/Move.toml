@@ -1,6 +1,7 @@
 [package]
 name = "letscoloring"
 edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
+publish-at = "0x95df9c6f7fbb4e9ce777aaddb6f2d832a7fceffa620bd26d8a577177599730a6"
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
@@ -19,7 +20,7 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 # Override = { local = "../conflicting/version", override = true }
 
 [addresses]
-letscoloring = "0x0"
+letscoloring = "0x95df9c6f7fbb4e9ce777aaddb6f2d832a7fceffa620bd26d8a577177599730a6"
 hold = "0xFFFF"
 
 # Named addresses will be accessible in Move as `@name`. They're also exported:
