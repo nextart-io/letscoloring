@@ -8,11 +8,12 @@ import styles from "./index.module.css";
 
 interface ColorItemProps {
   color: string;
+  filled?:boolean;
   children?: React.ReactNode;
   openPickColor: (open: boolean) => void;
 }
 
-function ColorItem({ color, children, openPickColor }: ColorItemProps) {
+function ColorItem({ filled, color, children, openPickColor }: ColorItemProps) {
   const currentAccount = useCurrentAccount();
   const { showToast } = useToast();
 
@@ -25,7 +26,7 @@ function ColorItem({ color, children, openPickColor }: ColorItemProps) {
       return;
     }
     // 已被选
-    if (color) {
+    if (filled) {
       showToast("has been choised !");
       return;
     }
