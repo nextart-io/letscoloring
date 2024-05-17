@@ -3,5 +3,5 @@
     /* 白色阴影 */ 5px 5px 15px rgba(0, 0, 0, 0.2); /* 黑色阴影 */
   transition: background-color 0.5s ease;
   background: linear-gradient(135deg, #ffffff 0%, #c5c5d4 100%);
-  @apply w-16 h-16 flex justify-center items-center cursor-pointer rounded-md;
+  @apply hover:animate-spin w-16 h-16 flex justify-center items-center cursor-pointer rounded-md 
 }

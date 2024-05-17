@@ -1,4 +1,3 @@
-import { stringToUint8Array } from "@/lib/utils";
 import { bcs} from "@mysten/bcs";
 import { GetObjectParams, SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions"
@@ -8,6 +7,15 @@ const Gm = "0x2d555a1ce4d5694f3a70b29262ed8b0cd28bbc2d0063bf0fc9a91ed2c5626852";
 const Rt = "0x20cc25fa22841cc358124a3ab2e7a7a4cd9678e5b2310a204d9c34306863a281"
 
 // 初始化可以通过 Gm 取 Game ID
+export const getGameId = async (client:SuiClient):Promise<SuiObjectResponse> => {
+    const params:GetObjectParams = {
+        id: Gm,
+        options:{
+            showContent:true,
+        }
+    }
+    return await client.getObject(params);  
+}
 
 /*public fun start_new_game(
     gm: &mut GameManager, 

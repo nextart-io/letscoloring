@@ -37,6 +37,10 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    const fetchData = async () => {};
+  }, []);
+
+  useEffect(() => {
     if (!isValidSuiObjectId(gameId)) return;
     const fetchData = async () => {
       try {

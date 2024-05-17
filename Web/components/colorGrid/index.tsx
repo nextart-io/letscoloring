@@ -10,7 +10,7 @@ import {
 } from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
 import { getGameInfo, FillGrid } from "@/api";
-import { unit8Array2String, stringToUint8Array } from "@/lib/utils";
+import { string2Uint8Array, unit8Array2String } from "@/lib/utils";
 import ColorItem from "./components/colorItem";
 import PickColor from "./components/pickColor";
 import styles from "./index.module.css";
@@ -128,7 +128,7 @@ function ColorGrid() {
             return `#${colorValue}`;
           }
 
-          return unit8Array2String(stringToUint8Array(colorValue)).substring(1);
+          return unit8Array2String(string2Uint8Array(colorValue)).substring(1);
         });
       });
 

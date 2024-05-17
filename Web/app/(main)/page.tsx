@@ -7,12 +7,11 @@ const gameId =
 
 const MainPage = () => {
   return (
-    <GameDataProvider gameId={gameId}>
+    
       <div className="flex justify-center">
         <ScreenElements />
         <ColorGrid />
       </div>
-    </GameDataProvider>
   );
 };
 
