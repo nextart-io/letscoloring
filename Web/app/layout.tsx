@@ -30,7 +30,7 @@ export default function RootLayout({
       <body className="bg-bg bg-cover bg-no-repeat h-screen">
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-            <WalletProvider theme={trueTheme}>{children}</WalletProvider>
+            <WalletProvider autoConnect={true} theme={trueTheme}>{children}</WalletProvider>
           </SuiClientProvider>
         </QueryClientProvider>
       </body>

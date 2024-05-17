@@ -1,6 +1,5 @@
 import ScreenElements from "@/components/screenElements";
 import ColorGrid from "@/components/colorGrid";
-import StartGame from "@/components/startGame";
 import { GameDataProvider } from "@/components/GameDataProvider";
 
 const gameId =
@@ -11,7 +10,6 @@ const MainPage = () => {
     <GameDataProvider gameId={gameId}>
       <div className="flex justify-center">
         <ScreenElements />
-        {/* <StartGame /> */}
         <ColorGrid />
       </div>
     </GameDataProvider>
