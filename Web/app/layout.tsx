@@ -1,7 +1,6 @@
 "use client";
 
 import "@mysten/dapp-kit/dist/index.css";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import {
   createNetworkConfig,
@@ -18,8 +17,6 @@ const { networkConfig } = createNetworkConfig({
   mainnet: { url: getFullnodeUrl("mainnet") },
   testnet: { url: getFullnodeUrl("testnet") },
 });
-
-const inter = Inter({ subsets: ["latin"] });
 
 const queryClient = new QueryClient();
 
