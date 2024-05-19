@@ -1,10 +1,8 @@
 "use client";
 
 import React from "react";
-import { keys } from "lodash";
 import { CirclePicker } from "react-color";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { colorConfig } from "@/lib/config";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface PickColorProps {
   pickColors: string[];
@@ -19,13 +17,13 @@ function PickColor(props: PickColorProps) {
   };
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="w-max">
-        <DialogTitle>pick a color</DialogTitle>
+      <DialogContent className="w-max bg-red-100" hideCloseButton={true}>
         <CirclePicker
-          width="324px"
-          circleSize={40}
+          circleSize={32}
+          circleSpacing={15}
           colors={props.pickColors}
           onChange={handleColorChange}
+          className="justify-center"
         />
       </DialogContent>
     </Dialog>

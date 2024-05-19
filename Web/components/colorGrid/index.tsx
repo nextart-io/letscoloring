@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { map } from "lodash";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import {
-  useAccounts,
   useCurrentAccount,
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
