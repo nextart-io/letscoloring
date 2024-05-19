@@ -11,17 +11,23 @@ interface PickColorProps {
   changeColor: (color: string) => void;
 }
 
-function PickColor(props: PickColorProps) {
+function PickColor({
+  open,
+  onOpenChange,
+  pickColors = [], // 假设 pickColors 没有默认值
+  changeColor,
+}: PickColorProps) {
   const handleColorChange = (color: { hex: string }) => {
-    props.changeColor(color.hex);
+    changeColor(color.hex);
   };
+
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-max bg-red-100" hideCloseButton={true}>
         <CirclePicker
           circleSize={32}
           circleSpacing={15}
-          colors={props.pickColors}
+          colors={pickColors}
           onChange={handleColorChange}
           className="justify-center"
         />

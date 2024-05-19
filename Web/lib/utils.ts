@@ -1,21 +1,21 @@
 import { GameData } from "@/types";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { SUI_DECIMALS } from "@mysten/sui.js/utils";
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-export const unit8Array2String = (uint8Array:Uint8Array):string =>{
-    const decoder = new TextDecoder();
-    return decoder.decode(uint8Array);
-}
+export const unit8Array2String = (uint8Array: Uint8Array): string => {
+  const decoder = new TextDecoder();
+  return decoder.decode(uint8Array);
+};
 
 export const string2Uint8Array = (str: string): Uint8Array => {
-   return new Uint8Array(str.split(',').map(Number));
-}
+  return new Uint8Array(str.split(",").map(Number));
+};
 
 export const formatGameResponseData = (response: SuiObjectResponse) => {
   // Format the data as needed
@@ -33,7 +33,7 @@ export const formatGameResponseData = (response: SuiObjectResponse) => {
             string2Uint8Array(grid.fields.color)
           ).substring(1);
         } else {
-          return "FFFFFF";
+          return "#FFFFFF";
         }
       });
     });
@@ -49,21 +49,17 @@ export const formatGameResponseData = (response: SuiObjectResponse) => {
       return { ...acc, [color]: count };
     }, {} as Record<string, string>);
     const formatResponse: GameData = {
+      id: fields.id.id,
       unfilled_grid: unfilled_grid,
       total_grid: (fields.cols * fields.rows).toString(),
-      total_reward: (
-        fields.total_reward / Math.pow(10, SUI_DECIMALS)
-      ).toString(),
+      total_reward: fields.total_reward,
       filled_by_color: formatFilledByColor,
       colors: formatColors,
       grids: formatGrids,
       grid_player: fields.grid_player,
-      payment: (fields.payment / Math.pow(10, SUI_DECIMALS)).toString(),
+      payment: fields.payment,
     };
     return formatResponse;
   }
   return null;
 };
-
-
-

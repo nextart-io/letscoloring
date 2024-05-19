@@ -23,7 +23,7 @@ function ColorItem({ color, children, openPickColor }: ColorItemProps) {
     if (!currentAccount) {
       setOpenConnect(true);
       return;
-    }
+    }    
     // 已被选
     if (color !== "#FFFFFF") {
       showToast("has been choised !");

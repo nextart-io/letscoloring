@@ -2,33 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { map } from "lodash";
-import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import {
   useCurrentAccount,
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
-import { getGameInfo, FillGrid } from "@/api";
-import { string2Uint8Array, unit8Array2String } from "@/lib/utils";
+import { FillGrid } from "@/api";
 import ColorItem from "./components/colorItem";
 import PickColor from "./components/pickColor";
 import styles from "./index.module.css";
-
-type GameInfo = {
-  content: {
-    fields: {
-      cnt: string;
-      colors: SharedArrayBuffer[];
-      cols: string;
-      grid_player: string[][];
-      grids: string[][];
-      id: string;
-      payment: string;
-      rows: string;
-      total_reward: string;
-    };
-  };
-};
+import { useGameData } from "../GameDataProvider";
 
 function ColorGrid() {
   const [openColor, setOpenColor] = useState(false);
@@ -42,15 +25,21 @@ function ColorGrid() {
     useSignAndExecuteTransactionBlock();
 
   const currentAccount = useCurrentAccount();
-
-  const client = new SuiClient({ url: getFullnodeUrl("testnet") });
-  const gameId =
-    "0xda9f33ef073fec0ea3d97799ec158cd2d80fb3097b8e918571c69002067b9676";
+  const {data,fetchData} = useGameData();
 
   const openPickColor = (row: number, col: number) => {
     setPickIndex([row, col]);
     setOpenColor(true);
   };
+
+  useEffect(() => {
+    if (data) {
+      setGridList(data.grids);
+      setGridRowCol([data.grids.length.toString(), data.grids[0].length.toString()]);
+      setPickColors(data.colors);
+    }
+  
+  }, [data]);
 
   // 选中颜色
   const changeColor = async (value: string) => {
@@ -58,19 +47,14 @@ function ColorGrid() {
       const row = pickIndex[0];
       const col = pickIndex[1];
 
-      const txb: any = FillGrid(
-        gameId,
-        "1000000000",
+      const txb = FillGrid(
+        data?.id!,
+        data?.payment!,
         `${row}`,
         `${col}`,
         value,
         currentAccount?.address!
       );
-
-      // const dryrunRes = await client.dryRunTransactionBlock({
-      //   transactionBlock: await txb.build({ client: client }),
-      // });
-      // console.log("dryrunRes===>", dryrunRes);
 
       signAndExecuteTransactionBlock(
         {
@@ -87,9 +71,8 @@ function ColorGrid() {
         {
           onSuccess: (res) => {
             showToast("Success !");
-
             console.log(res);
-            initGrid();
+            fetchData();
             setOpenColor(false);
           },
           onError: (err) => {
@@ -101,45 +84,6 @@ function ColorGrid() {
       );
     }
   };
-
-  const initGrid = () => {
-    getGameInfo(client, gameId).then((res) => {
-      const gameData = res.data as unknown as GameInfo;
-      // 列
-      const cols = gameData.content.fields.cols;
-      // 行
-      const rows = gameData.content.fields.rows;
-      const unit8Colors = gameData.content.fields.colors;
-      const gridsObject = gameData.content.fields.grids;
-      // 格子的钱包地址
-      // const grid_player = gameData.content.fields.grid_player;
-      // pick color 组件可用的颜色
-      const colors = map(unit8Colors, (item) => {
-        const arr = new Uint8Array(item);
-        return unit8Array2String(arr);
-      });
-      // 格子颜色
-
-      const gridsColors = map(gridsObject, (row) => {
-        return map(row, (item: { fields: { color: string } }) => {
-          const colorValue = item.fields.color;
-          if (colorValue === "FFFFFF") {
-            return `#${colorValue}`;
-          }
-
-          return unit8Array2String(string2Uint8Array(colorValue)).substring(1);
-        });
-      });
-
-      setPickColors(colors);
-      setGridRowCol([rows, cols]);
-      setGridList(gridsColors as unknown as string[][]);
-    });
-  };
-
-  useEffect(() => {
-    initGrid();
-  }, []);
 
   return (
     <div className={styles.colorGrid}>

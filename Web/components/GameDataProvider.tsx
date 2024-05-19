@@ -5,23 +5,23 @@ import React, {
   useEffect,
   useContext,
   ReactNode,
+  useCallback,
 } from "react";
-import {
-  getFullnodeUrl,
-  SuiClient,
-} from "@mysten/sui.js/client";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import { isValidSuiObjectId } from "@mysten/sui.js/utils";
-import { formatGameResponseData} from "@/lib/utils";
+import { formatGameResponseData } from "@/lib/utils";
 import { GameData } from "@/types";
 
 interface GameDataContextType {
   data: GameData | null;
   error: Error | null;
+  fetchData: () => void;
 }
 
 const GameDataContext = createContext<GameDataContextType | undefined>(
   undefined
 );
+
 const client = new SuiClient({ url: getFullnodeUrl("testnet") });
 
 interface GameDataProviderProps {
@@ -36,48 +36,41 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
   const [data, setData] = useState<GameData | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {};
-  }, []);
-
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!isValidSuiObjectId(gameId)) return;
-    const fetchData = async () => {
-      try {
-        const response = await client.getObject({
-          options: {
-            showContent: true,
-          },
-          id: gameId, // Provide the necessary object ID here
-        });
+    try {
+      const response = await client.getObject({
+        options: {
+          showContent: true,
+        },
+        id: gameId,
+      });
 
-        const formattedData = formatGameResponseData(response);
-        console.log(formattedData);
-        setData(formattedData);
-      } catch (err) {
-        setError(err as Error);
-      }
-    };
-
-    fetchData(); // Initial fetch
-    const intervalId = setInterval(fetchData, 10000); // Fetch data every second
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
+      const formattedData = formatGameResponseData(response);
+      console.log(formattedData);
+      setData(formattedData);
+    } catch (err) {
+      setError(err as Error);
+    }
   }, [gameId]);
 
-
+  useEffect(() => {
+    fetchData(); // Initial fetch
+    const intervalId = setInterval(fetchData, 10000); // Fetch data every 10 seconds
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [gameId, fetchData]);
 
   return (
-    <GameDataContext.Provider value={{ data, error }}>
+    <GameDataContext.Provider value={{ data, error, fetchData }}>
       {children}
     </GameDataContext.Provider>
   );
 };
 
-export const useData = (): GameDataContextType => {
+export const useGameData = (): GameDataContextType => {
   const context = useContext(GameDataContext);
   if (!context) {
-    throw new Error("useData must be used within a DataProvider");
+    throw new Error("useGameData must be used within a GameDataProvider");
   }
   return context;
 };

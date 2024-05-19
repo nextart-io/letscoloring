@@ -1,4 +1,5 @@
 export type GameData = {
+    id:string;
     unfilled_grid:string;
     total_grid:string;
     total_reward:string;

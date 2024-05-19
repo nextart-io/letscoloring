@@ -1,11 +1,11 @@
 "use client";
 
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
-import { useData } from "./GameDataProvider";
+import { useGameData } from "./GameDataProvider";
 
 const NavBar = () => {
   const account = useCurrentAccount();
-  const gamedata = useData();
+  const gamedata = useGameData();
   return (
     <div className="w-full flex justify-end">
       <div className="flex m-5 p-2 h-16 gap-2">
