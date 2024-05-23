@@ -32,7 +32,7 @@ function StartGame() {
 
     // 创建 5 * 5 格子，随机 3 个颜色
     const txb: any = StartNewGame(
-      "10000000",
+      "1000",
       "5",
       "5",
       shuffle(keys(colorConfig)).slice(0, 3)
@@ -42,27 +42,21 @@ function StartGame() {
       {
         transactionBlock: txb,
         options: {
-          showEffects: true,
-          showBalanceChanges: true,
           showEvents: true,
-          showInput: true,
-          showObjectChanges: true,
-          showRawInput: true,
         },
       },
       {
-        onSuccess: (res) => {
-          const { effects } = res;
+        onSuccess: (res: any) => {
+          const game_address = res.events[0]?.parsedJson?.game_address;
 
-          showToast("Lets Gaming !");
+          if (game_address) {
+            getGameInfo(client, game_address).then((res2) => {
+              showToast("Lets Gaming !");
+              const gameId = res2.data?.objectId;
 
-          if (effects && effects.created && effects.created.length > 1) {
-            getGameInfo(client, effects?.created[1].reference.objectId).then(
-              (res2) => {
-                console.log("res2===>", res2);
-                router.push(`/${res2.data?.objectId}`);
-              }
-            );
+              console.log("res2===>", res2, gameId);
+              router.replace(`/${gameId}`);
+            });
           }
         },
         onError: (err) => {

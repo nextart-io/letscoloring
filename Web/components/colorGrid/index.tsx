@@ -8,7 +8,7 @@ import {
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
-import { FillGrid, FillGridUsingCustomToken, Settlement } from "@/api";
+import { FillGrid, FillGridUsingCustomToken } from "@/api";
 import ColorItem from "./components/colorItem";
 import PickColor from "./components/pickColor";
 import styles from "./index.module.css";
