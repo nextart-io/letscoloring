@@ -1,15 +1,15 @@
 [
   {
     "type": "coloring::RecordTicketInfo",
-    "id": "0x3bb7f1afd97f89cb21ec30fd827a81f178f755db4b8bdb3daaca61eecb869162"
+    "id": "0xdf77f6ef130760dd4fce4ed2bcc0c7736d435ba9f687e83c73122827578e5529"
   },
   {
     "type": "coloring::GameManager",
-    "id": "0x4a7e850b020eec584aa06f8b497ca883c271e4549a1e7e88bd76f84a6cca5c70"
+    "id": "0x4ff60acab8d171f8bbeb68f18536979ae4a90b06d2151f220ea91a17056e6a9a"
   },
   {
     "type": "package",
-    "id": "0x358a137683fe62b981d53e80320c8295462fc50c6a66c470c518592afa2c060b"
+    "id": "0x71a15b0caad761a888efd500bf7c773806a97915e3af894a1a2cb6866a8c6466"
   },
   {
     "FudCoin":"0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017",
