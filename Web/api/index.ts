@@ -2,10 +2,32 @@ import { bcs} from "@mysten/bcs";
 import { GetObjectParams, SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions"
 
-const Package = "0x95df9c6f7fbb4e9ce777aaddb6f2d832a7fceffa620bd26d8a577177599730a6";
-const Gm = "0x2d555a1ce4d5694f3a70b29262ed8b0cd28bbc2d0063bf0fc9a91ed2c5626852";
-const Rt = "0x20cc25fa22841cc358124a3ab2e7a7a4cd9678e5b2310a204d9c34306863a281"
+const Package = "0x358a137683fe62b981d53e80320c8295462fc50c6a66c470c518592afa2c060b";
+const Gm = "0x4a7e850b020eec584aa06f8b497ca883c271e4549a1e7e88bd76f84a6cca5c70";
+const Rt = "0x3bb7f1afd97f89cb21ec30fd827a81f178f755db4b8bdb3daaca61eecb869162";
+const Coin_Package = "0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017";
+const Coin_Treasury = "0x2ac9063e4b39d70bd056ae288bf7aae53271612a3ec56714e2dc30f9bd82e0fc"
 
+/*
+public entry fun mint(
+        treasury_cap: &mut TreasuryCap<COIN>,
+        amount: u64,
+        recipient: address,
+        ctx: &mut TxContext
+    )
+*/
+export const getTestCoin = (recipient:string):TransactionBlock=>{
+    const txb = new TransactionBlock();
+    txb.moveCall({
+        target:`${Coin_Package}::Coin::mint`,
+        arguments:[
+            txb.object(`${Coin_Treasury}`),
+            txb.pure(`100000`),
+            txb.pure(recipient)
+        ]
+    });
+    return txb
+}
 // 初始化可以通过 Gm 取 Game ID
 export const getGameId = async (client:SuiClient):Promise<SuiObjectResponse> => {
     const params:GetObjectParams = {
