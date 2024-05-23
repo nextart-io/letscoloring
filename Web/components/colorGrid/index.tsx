@@ -8,7 +8,7 @@ import {
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
-import { FillGrid, FillGridUsingCustomToken, Settlement } from "@/api";
+import { FillGrid, FillGridUsingCustomToken } from "@/api";
 import ColorItem from "./components/colorItem";
 import PickColor from "./components/pickColor";
 import styles from "./index.module.css";
@@ -57,8 +57,7 @@ function ColorGrid() {
 
     FillGridUsingCustomToken(
       data?.id!,
-      // BigInt(data?.payment!),
-      BigInt(10000),
+      BigInt(data?.payment!),
       `${row}`,
       `${col}`,
       value,
@@ -71,56 +70,29 @@ function ColorGrid() {
       });
       console.log("dryrunRes===>", dryrunRes);
 
-      // signAndExecuteTransactionBlock(
-      //   {
-      //     transactionBlock: txb,
-      //     options: {
-      //       showEffects: true,
-      //     },
-      //   },
-      //   {
-      //     onSuccess: (res) => {
-      //       showToast("Success !");
-      //       fetchData();
-      //       settlement(res);
-      //       setOpenColor(false);
-      //     },
-      //     onError: (err) => {
-      //       showToast("Tx Failed!");
-      //       fetchData();
-      //       setOpenColor(false);
-      //       console.log(err);
-      //     },
-      //   }
-      // );
+      if (dryrunRes.effects.status.status === "success") {
+        signAndExecuteTransactionBlock(
+          {
+            transactionBlock: txb,
+            options: {},
+          },
+          {
+            onSuccess: () => {
+              showToast("Success !");
+
+              fetchData();
+              setOpenColor(false);
+            },
+            onError: (err) => {
+              showToast("Tx Failed!");
+              fetchData();
+              setOpenColor(false);
+              console.log(err);
+            },
+          }
+        );
+      }
     });
-  };
-
-  // 结算
-  const settlement = (res) => {
-    console.log("res===>", res);
-    console.log("data===>", data);
-    // if (data?.unfilled_grid === "0") {
-    //   const txb = Settlement(data?.id);
-
-    //   signAndExecuteTransactionBlock(
-    //     {
-    //       transactionBlock: txb,
-    //       options: {
-    //         showEffects: true,
-    //       },
-    //     },
-    //     {
-    //       onSuccess: (res) => {
-    //         showToast("Success !");
-    //       },
-    //       onError: (err) => {
-    //         showToast("Tx Failed!");
-    //         console.log(err);
-    //       },
-    //     }
-    //   );
-    // }
   };
 
   return (

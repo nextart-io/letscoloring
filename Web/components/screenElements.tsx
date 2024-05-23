@@ -1,9 +1,44 @@
 "use client";
 import Image from "next/image";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransactionBlock,
+} from "@mysten/dapp-kit";
+import { useToast } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
+import { Settlement } from "@/api";
+import { useGameData } from "./GameDataProvider";
 
 const ScreenElements = () => {
   const account = useCurrentAccount();
+  const { data, fetchData } = useGameData();
+  const { showToast } = useToast();
+  const { mutate: signAndExecuteTransactionBlock } =
+    useSignAndExecuteTransactionBlock();
+
+  // 结算
+  const settlement = () => {
+    if ((data?.unfilled_grid as unknown as number) < 1) {
+      const txb = Settlement(data?.id as string);
+      signAndExecuteTransactionBlock(
+        {
+          transactionBlock: txb,
+          options: {},
+        },
+        {
+          onSuccess: () => {
+            fetchData();
+            showToast("Success !");
+          },
+          onError: (err) => {
+            showToast("Tx Failed!");
+            console.log(err);
+          },
+        }
+      );
+    }
+  };
+
   return (
     <div className="relative">
       <Image
@@ -43,9 +78,13 @@ const ScreenElements = () => {
         height={100}
         className="fixed bottom-1 right-1"
       ></Image>
-      <div className="fixed w-1/3 p-10 left-1/3 bottom-20 rounded-3xl bg-red-100">
-        <h1 className="text-center text-red-500">We need a Billboard Here</h1>
-      </div>
+      {(data?.unfilled_grid as unknown as number) < 1 && (
+        <div className="fixed w-1/3 p-10 left-1/3 bottom-20 rounded-3xl bg-red-100 flex justify-center items-center">
+          <Button className="w-2/4 rounded-full" onClick={settlement}>
+            Settlement
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
