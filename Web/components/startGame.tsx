@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { keys, take } from "lodash";
+import { keys, shuffle } from "lodash";
 import {
   ConnectModal,
   useCurrentAccount,
@@ -10,7 +10,7 @@ import {
 import { StartNewGame, getGameInfo } from "@/api";
 import { colorConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/toast";
-
+import { useRouter } from "next/navigation";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 
 function StartGame() {
@@ -18,6 +18,7 @@ function StartGame() {
     useSignAndExecuteTransactionBlock();
   const currentAccount = useCurrentAccount();
   const { showToast } = useToast();
+  const router = useRouter();
 
   const client = new SuiClient({ url: getFullnodeUrl("testnet") });
 
@@ -29,11 +30,12 @@ function StartGame() {
       return;
     }
 
+    // 创建 5 * 5 格子，随机 3 个颜色
     const txb: any = StartNewGame(
       "10000000",
-      "3",
-      "3",
-      take(keys(colorConfig), 5)
+      "5",
+      "5",
+      shuffle(keys(colorConfig)).slice(0, 3)
     );
 
     signAndExecuteTransactionBlock(
@@ -57,7 +59,8 @@ function StartGame() {
           if (effects && effects.created && effects.created.length > 1) {
             getGameInfo(client, effects?.created[1].reference.objectId).then(
               (res2) => {
-                console.log(res2);
+                console.log("res2===>", res2);
+                router.push(`/${res2.data?.objectId}`);
               }
             );
           }
@@ -78,7 +81,7 @@ function StartGame() {
           style={{ marginTop: "-20%" }}
         >
           <div
-            className="text-2xl font-bold cursor-pointer"
+            className="text-4xl font-bold cursor-pointer"
             style={{ color: "#ff9800" }}
             onClick={handleStartGame}
           >

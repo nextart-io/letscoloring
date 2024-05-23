@@ -1,13 +1,49 @@
 "use client";
 
-import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  ConnectButton,
+  useCurrentAccount,
+  useSignAndExecuteTransactionBlock,
+} from "@mysten/dapp-kit";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
+import { getTestCoin } from "@/api";
 import { useGameData } from "./GameDataProvider";
 
 const NavBar = () => {
   const account = useCurrentAccount();
   const gamedata = useGameData();
+  const { mutate: signAndExecuteTransactionBlock } =
+    useSignAndExecuteTransactionBlock();
+  const { showToast } = useToast();
+
+  const handleClaim = async () => {
+    const txb = await getTestCoin(`${account?.address}`);
+
+    signAndExecuteTransactionBlock(
+      {
+        transactionBlock: txb,
+        options: {},
+      },
+      {
+        onSuccess: (res) => {
+          showToast("Claim Success!");
+        },
+        onError: (err) => {
+          showToast("Claim Failed!");
+          console.log(err);
+        },
+      }
+    );
+  };
+
   return (
     <div className="w-full flex justify-end">
+      {account && (
+        <div className="m-6 p-2 h-16">
+          <Button onClick={handleClaim}>Claim test FUD</Button>
+        </div>
+      )}
       <div className="flex m-5 p-2 h-16 gap-2">
         {gamedata?.data?.filled_by_color &&
           Object.entries(gamedata?.data?.filled_by_color!).map(

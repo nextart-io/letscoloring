@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { map } from "lodash";
 import {
+  useSuiClient,
   useCurrentAccount,
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
 import { useToast } from "@/components/ui/toast";
-import { FillGrid } from "@/api";
+import { FillGrid, FillGridUsingCustomToken, Settlement } from "@/api";
 import ColorItem from "./components/colorItem";
 import PickColor from "./components/pickColor";
 import styles from "./index.module.css";
@@ -24,8 +25,9 @@ function ColorGrid() {
   const { mutate: signAndExecuteTransactionBlock } =
     useSignAndExecuteTransactionBlock();
 
+  const client: any = useSuiClient();
   const currentAccount = useCurrentAccount();
-  const {data,fetchData} = useGameData();
+  const { data, fetchData } = useGameData();
 
   const openPickColor = (row: number, col: number) => {
     setPickIndex([row, col]);
@@ -35,54 +37,90 @@ function ColorGrid() {
   useEffect(() => {
     if (data) {
       setGridList(data.grids);
-      setGridRowCol([data.grids.length.toString(), data.grids[0].length.toString()]);
+      setGridRowCol([
+        data.grids.length.toString(),
+        data.grids[0].length.toString(),
+      ]);
       setPickColors(data.colors);
     }
-  
   }, [data]);
 
   // 选中颜色
   const changeColor = async (value: string) => {
-    if (pickIndex) {
-      const row = pickIndex[0];
-      const col = pickIndex[1];
-
-      const txb = FillGrid(
-        data?.id!,
-        data?.payment!,
-        `${row}`,
-        `${col}`,
-        value,
-        currentAccount?.address!
-      );
-
-      signAndExecuteTransactionBlock(
-        {
-          transactionBlock: txb,
-          options: {
-            showEffects: true,
-            showBalanceChanges: true,
-            showEvents: true,
-            showInput: true,
-            showObjectChanges: true,
-            showRawInput: true,
-          },
-        },
-        {
-          onSuccess: (res) => {
-            showToast("Success !");
-            console.log(res);
-            fetchData();
-            setOpenColor(false);
-          },
-          onError: (err) => {
-            showToast("Tx Failed!");
-            setOpenColor(false);
-            console.log(err);
-          },
-        }
-      );
+    if (!pickIndex || !data?.colors.includes(value)) {
+      showToast("transaction failed");
+      return;
     }
+
+    const row = pickIndex[0];
+    const col = pickIndex[1];
+
+    FillGridUsingCustomToken(
+      data?.id!,
+      // BigInt(data?.payment!),
+      BigInt(10000),
+      `${row}`,
+      `${col}`,
+      value,
+      currentAccount?.address!,
+      client
+    ).then(async (txb) => {
+      txb.setSender(currentAccount?.address!);
+      const dryrunRes = await client.dryRunTransactionBlock({
+        transactionBlock: await txb.build({ client: client }),
+      });
+      console.log("dryrunRes===>", dryrunRes);
+
+      // signAndExecuteTransactionBlock(
+      //   {
+      //     transactionBlock: txb,
+      //     options: {
+      //       showEffects: true,
+      //     },
+      //   },
+      //   {
+      //     onSuccess: (res) => {
+      //       showToast("Success !");
+      //       fetchData();
+      //       settlement(res);
+      //       setOpenColor(false);
+      //     },
+      //     onError: (err) => {
+      //       showToast("Tx Failed!");
+      //       fetchData();
+      //       setOpenColor(false);
+      //       console.log(err);
+      //     },
+      //   }
+      // );
+    });
+  };
+
+  // 结算
+  const settlement = (res) => {
+    console.log("res===>", res);
+    console.log("data===>", data);
+    // if (data?.unfilled_grid === "0") {
+    //   const txb = Settlement(data?.id);
+
+    //   signAndExecuteTransactionBlock(
+    //     {
+    //       transactionBlock: txb,
+    //       options: {
+    //         showEffects: true,
+    //       },
+    //     },
+    //     {
+    //       onSuccess: (res) => {
+    //         showToast("Success !");
+    //       },
+    //       onError: (err) => {
+    //         showToast("Tx Failed!");
+    //         console.log(err);
+    //       },
+    //     }
+    //   );
+    // }
   };
 
   return (

@@ -1,11 +1,11 @@
 import ScreenElements from "@/components/screenElements";
-import StartGame from "@/components/startGame";
+import ColorGrid from "@/components/colorGrid";
 
 const MainPage = () => {
   return (
     <div className="flex justify-center">
       <ScreenElements />
-      <StartGame />
+      <ColorGrid />
     </div>
   );
 };
