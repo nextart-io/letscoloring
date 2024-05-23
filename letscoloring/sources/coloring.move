@@ -152,6 +152,10 @@ module letscoloring::coloring{
         transfer::share_object(game);
     }
 
+    public fun get_games(gm:&GameManager):&TableVec<ID>{
+        &gm.games
+    }
+
     public fun get_player<T>(game: &Game<T>, row: u64, col: u64): address {
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let tg_row = vector::borrow<vector<address>>(&game.grid_player, row);

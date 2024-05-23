@@ -1,4 +1,5 @@
 import { bcs } from "@mysten/bcs";
+import { useSuiClientQueries, useSuiClientQuery } from "@mysten/dapp-kit";
 import {
   GetObjectParams,
   SuiClient,
@@ -7,9 +8,9 @@ import {
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 const Package =
-  "0x71a15b0caad761a888efd500bf7c773806a97915e3af894a1a2cb6866a8c6466";
-const Gm = "0x4ff60acab8d171f8bbeb68f18536979ae4a90b06d2151f220ea91a17056e6a9a";
-const Rt = "0xdf77f6ef130760dd4fce4ed2bcc0c7736d435ba9f687e83c73122827578e5529";
+  "0x128750275526d245eb6b57eeef51f50e2c0eaae41e74acd52a63ae4604edfdbd";
+const Gm = "0xf39dafa34d35c8156a89d222bfa4283fc8ac95da4566e16ea561071b110cba03";
+const Rt = "0x72a989853bbb44894094f5e8ee2daa1ceecc984643e0120aebe575b5b5bfb763";
 const Coin_Package =
   "0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017";
 const Coin_Treasury =
@@ -49,6 +50,17 @@ export const getGameId = async (
   };
   return await client.getObject(params);
 };
+
+export const getGames = ()=>{
+  const txb = new TransactionBlock();
+  const [games] = txb.moveCall({
+    target:`${Package}::coloring::get_games`,
+    arguments:[
+      txb.pure(`${Gm}`)
+    ]
+  })
+  return games;
+}
 
 /*public fun start_new_game(
     gm: &mut GameManager, 

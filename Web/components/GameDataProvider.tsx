@@ -11,6 +11,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import { isValidSuiObjectId } from "@mysten/sui.js/utils";
 import { formatGameResponseData } from "@/lib/utils";
 import { GameData } from "@/types";
+import { getGameId } from "@/api";
 
 interface GameDataContextType {
   data: GameData | null;
@@ -48,6 +49,8 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
 
       const formattedData = formatGameResponseData(response);
       console.log(formattedData);
+      const game_id = await getGameId(client)
+      console.log(game_id);
       setData(formattedData);
     } catch (err) {
       setError(err as Error);

@@ -55,49 +55,42 @@ function ColorGrid() {
     const row = pickIndex[0];
     const col = pickIndex[1];
 
-    FillGridUsingCustomToken(
+    const txb = await FillGridUsingCustomToken(
       data?.id!,
-      // BigInt(data?.payment!),
-      BigInt(10000),
+      BigInt(data?.payment!),
       `${row}`,
       `${col}`,
       value,
       currentAccount?.address!,
       client
-    ).then(async (txb) => {
-      txb.setSender(currentAccount?.address!);
-      const dryrunRes = await client.dryRunTransactionBlock({
-        transactionBlock: await txb.build({ client: client }),
-      });
-      console.log("dryrunRes===>", dryrunRes);
+    );
 
-      // signAndExecuteTransactionBlock(
-      //   {
-      //     transactionBlock: txb,
-      //     options: {
-      //       showEffects: true,
-      //     },
-      //   },
-      //   {
-      //     onSuccess: (res) => {
-      //       showToast("Success !");
-      //       fetchData();
-      //       settlement(res);
-      //       setOpenColor(false);
-      //     },
-      //     onError: (err) => {
-      //       showToast("Tx Failed!");
-      //       fetchData();
-      //       setOpenColor(false);
-      //       console.log(err);
-      //     },
-      //   }
-      // );
-    });
+    signAndExecuteTransactionBlock(
+      {
+        transactionBlock: txb,
+        options: {
+          showEffects: true,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          showToast("Success !");
+          fetchData();
+          settlement(res);
+          setOpenColor(false);
+        },
+        onError: (err) => {
+          showToast("Tx Failed!");
+          fetchData();
+          setOpenColor(false);
+          console.log(err);
+        },
+      }
+    );
   };
 
   // 结算
-  const settlement = (res) => {
+  const settlement = (res:any) => {
     console.log("res===>", res);
     console.log("data===>", data);
     // if (data?.unfilled_grid === "0") {

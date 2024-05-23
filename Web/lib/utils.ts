@@ -28,13 +28,7 @@ export const formatGameResponseData = (response: SuiObjectResponse) => {
     });
     const formatGrids = fields.grids.map((grids: any) => {
       return grids.map((grid: any) => {
-        if (grid.fields.color !== "#FFFFFF") {
-          return unit8Array2String(
-            string2Uint8Array(grid.fields.color)
-          ).substring(1);
-        } else {
-          return "#FFFFFF";
-        }
+        return grid.fields.color;
       });
     });
     fields.grids.map((grids: any) => {
