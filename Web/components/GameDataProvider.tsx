@@ -11,11 +11,12 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import { isValidSuiObjectId } from "@mysten/sui.js/utils";
 import { formatGameResponseData } from "@/lib/utils";
 import { GameData } from "@/types";
-import { getGameId } from "@/api";
+import { getLastGameId } from "@/api";
 
 interface GameDataContextType {
   data: GameData | null;
   error: Error | null;
+  last_game_id:string;
   fetchData: () => void;
 }
 
@@ -27,44 +28,43 @@ const client = new SuiClient({ url: getFullnodeUrl("testnet") });
 
 interface GameDataProviderProps {
   children: ReactNode;
-  gameId: string;
 }
 
 export const GameDataProvider: React.FC<GameDataProviderProps> = ({
-  children,
-  gameId,
+  children
 }): JSX.Element => {
   const [data, setData] = useState<GameData | null>(null);
   const [error, setError] = useState<Error | null>(null);
-
+  const [last_game_id,setLastGameId] = useState<string>('');
+  
   const fetchData = useCallback(async () => {
-    if (!isValidSuiObjectId(gameId)) return;
+    const id = await getLastGameId(client);
+    setLastGameId(id);
+    if (!isValidSuiObjectId(last_game_id!)) return;
     try {
       const response = await client.getObject({
         options: {
           showContent: true,
         },
-        id: gameId,
+        id: last_game_id!,
       });
 
       const formattedData = formatGameResponseData(response);
       console.log(formattedData);
-      const game_id = await getGameId(client)
-      console.log(game_id);
       setData(formattedData);
     } catch (err) {
       setError(err as Error);
     }
-  }, [gameId]);
+  }, [last_game_id]);
 
   useEffect(() => {
     fetchData(); // Initial fetch
     const intervalId = setInterval(fetchData, 10000); // Fetch data every 10 seconds
     return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [gameId, fetchData]);
+  }, [last_game_id, fetchData]);
 
   return (
-    <GameDataContext.Provider value={{ data, error, fetchData }}>
+    <GameDataContext.Provider value={{ data, error, last_game_id,fetchData }}>
       {children}
     </GameDataContext.Provider>
   );

@@ -1,5 +1,4 @@
 import { bcs } from "@mysten/bcs";
-import { useSuiClientQueries, useSuiClientQuery } from "@mysten/dapp-kit";
 import {
   GetObjectParams,
   SuiClient,
@@ -51,15 +50,38 @@ export const getGameId = async (
   return await client.getObject(params);
 };
 
-export const getGames = ()=>{
-  const txb = new TransactionBlock();
-  const [games] = txb.moveCall({
-    target:`${Package}::coloring::get_games`,
-    arguments:[
-      txb.pure(`${Gm}`)
-    ]
+export const getLastGameId = async (client: SuiClient) => {
+  const gm_object_id = await client.getObject({
+    id: `${Gm}`,
+    options: {
+      showContent: true
+    }
+  });
+
+  const content = gm_object_id.data?.content as any;
+  const table_object_id = content.fields.games.fields.contents.fields.id.id;
+  if (!table_object_id) return
+
+  const data = await client.getDynamicFields(
+    {
+      parentId: `${table_object_id}`,
+    }
+  )
+  const total_games = data.data.map((game) => {
+    return game.objectId
+  });
+
+  const last_game_object = await client.getObject({
+    id:total_games.at(-1)!,
+    options:{
+      showContent:true
+    }
   })
-  return games;
+
+  const last_game_object_content = last_game_object.data?.content as any;
+  const last_game_id = last_game_object_content.fields.value;
+
+  return last_game_id;
 }
 
 /*public fun start_new_game(

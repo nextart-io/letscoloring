@@ -6,7 +6,7 @@ import { GameDataProvider } from "@/components/GameDataProvider";
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <ToastProvider>
-      <GameDataProvider gameId={""}>
+      <GameDataProvider>
         <div className="">
           <div className="flex justify-end">
             <NavBar></NavBar>

@@ -7,11 +7,12 @@ import {
   useCurrentAccount,
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
-import { StartNewGame, getGameInfo } from "@/api";
+import { StartNewGame, getGameInfo,} from "@/api";
 import { colorConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 function StartGame() {
   const { mutate: signAndExecuteTransactionBlock } =
@@ -29,12 +30,12 @@ function StartGame() {
       setOpenConnect(true);
       return;
     }
-
-    // 创建 5 * 5 格子，随机 3 个颜色
-    const txb: any = StartNewGame(
+    
+    // 创建 4 * 4 格子，随机 3 个颜色
+    const txb: TransactionBlock  = StartNewGame(
       "1000",
-      "5",
-      "5",
+      "4",
+      "4",
       shuffle(keys(colorConfig)).slice(0, 3)
     );
 
