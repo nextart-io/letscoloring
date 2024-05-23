@@ -1,6 +1,5 @@
 module letscoloring::coloring{
     use sui::coin::{Self, Coin};
-    use sui::sui::SUI;
     use sui::url::{Url};
     use sui::balance::{Self, Balance};
     use sui::package;
@@ -10,6 +9,7 @@ module letscoloring::coloring{
     use sui::table::{Self, Table};
     use sui::table_vec::{Self, TableVec};
     use sui::event;
+    
     
     //Error
     const ENotEnd: u64 = 0;
@@ -48,7 +48,7 @@ module letscoloring::coloring{
         games: TableVec<ID>,
     }
 
-    public struct Game has key, store {
+    public struct Game<phantom T> has key, store {
         id: UID,
         payment: u64,
         rows: u64,
@@ -56,7 +56,7 @@ module letscoloring::coloring{
         cnt: u64,
         colors:vector<vector<u8>>,
         grids: vector<vector<Grid>>,
-        total_reward: Balance<SUI>,
+        total_reward: Balance<T>,
         reward_by_player:Table<address,u64>,
         grid_player: vector<vector<address>>,
     }
@@ -101,7 +101,7 @@ module letscoloring::coloring{
     }
 
     // Open to start
-    public fun start_new_game(
+    public fun start_new_game<T>(
         gm: &mut GameManager, 
         payment: u64, 
         rows: u64,
@@ -131,7 +131,7 @@ module letscoloring::coloring{
             i = i - 1;
         };
         
-       let game = Game {
+       let game = Game{
             id: object::new(ctx),
             payment: payment,
             rows,
@@ -139,7 +139,7 @@ module letscoloring::coloring{
             cnt: rows * cols,
             colors,
             grids: grids_2d,
-            total_reward: balance::zero(),
+            total_reward: balance::zero<T>(),
             reward_by_player:table::new(ctx),
             grid_player: addr_2d,
         };
@@ -152,21 +152,21 @@ module letscoloring::coloring{
         transfer::share_object(game);
     }
 
-    public fun get_player(game: &Game, row: u64, col: u64): address {
+    public fun get_player<T>(game: &Game<T>, row: u64, col: u64): address {
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let tg_row = vector::borrow<vector<address>>(&game.grid_player, row);
         let tg_player = vector::borrow<address>(tg_row, col);
         *tg_player
     }
 
-    fun set_player(game: &mut Game, row: u64, col: u64, ctx: &TxContext) {
+    fun set_player<T>(game: &mut Game<T>, row: u64, col: u64, ctx: &TxContext) {
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let tg_row = vector::borrow_mut<vector<address>>(&mut game.grid_player, row);
         let tg_player = vector::borrow_mut<address>(tg_row, col);
         *tg_player = ctx.sender();
     }
 
-    public fun borrow_grid(game: &Game, row: u64, col: u64): &Grid {
+    public fun borrow_grid<T>(game: &Game<T>, row: u64, col: u64): &Grid {
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let tg_row = vector::borrow<vector<Grid>>(&game.grids, row);
         let tg_grid = vector::borrow<Grid>(tg_row, col);
@@ -181,7 +181,7 @@ module letscoloring::coloring{
         grid.color
     }
 
-    public fun borrow_mut_grid(game: &mut Game, row: u64, col: u64): &mut Grid {
+    public fun borrow_mut_grid<T>(game: &mut Game<T>, row: u64, col: u64): &mut Grid {
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let tg_row = vector::borrow_mut<vector<Grid>>(&mut game.grids, row);
         let tg_grid = vector::borrow_mut<Grid>(tg_row, col);
@@ -196,9 +196,9 @@ module letscoloring::coloring{
         grid.color = color;
     }
 
-    public fun fill_grid(
-        game: &mut Game,
-        token: &mut Coin<SUI>,
+    public fun fill_grid<T>(
+        game: &mut Game<T>,
+        token: &mut Coin<T>,
         row: u64,
         col: u64,
         new_color: vector<u8>,
@@ -219,7 +219,7 @@ module letscoloring::coloring{
         assert!(!get_grid_filled(grid_b), EGridAlreadyFilled);
 
         let game_coin = coin::split(token, game.payment, ctx);
-        balance::join<SUI>(&mut game.total_reward, coin::into_balance(game_coin));
+        balance::join<T>(&mut game.total_reward, coin::into_balance(game_coin));
         
         let grid_bm = borrow_mut_grid(game, row, col);
         set_grid_filled(grid_bm);
@@ -242,7 +242,7 @@ module letscoloring::coloring{
     }
 
     #[allow(lint(self_transfer))]
-    public fun settlement(game: &mut Game, ctx: &mut TxContext) {
+    public fun settlement<T>(game: &mut Game<T>, ctx: &mut TxContext) {
         assert!(game.cnt == 0, ENotEnd);
         let rows = game.rows;
         let cols = game.cols;
@@ -333,7 +333,7 @@ module letscoloring::coloring{
             i = i + 1;
         };
 
-        let total_reward = balance::value<SUI>(&game.total_reward);
+        let total_reward = balance::value<T>(&game.total_reward);
 
         event::emit(SettleGameEvent{
             game: object::id(game),
@@ -396,7 +396,7 @@ module letscoloring::coloring{
         table::drop<address, u64>(min_color_player_cnt);
     }
 
-    fun update_game_reward_table(game: &mut Game,new_value:u64,player:address){
+    fun update_game_reward_table<T>(game: &mut Game<T>,new_value:u64,player:address){
         if(table::contains(&game.reward_by_player,player)){
                 let bm_balance = table::borrow_mut(&mut game.reward_by_player,player);
                 *bm_balance = *bm_balance + new_value;
@@ -406,11 +406,11 @@ module letscoloring::coloring{
     }
 
     #[allow(lint(self_transfer))]
-    public fun claim_reward(game: &mut Game, ctx:&mut TxContext){
+    public fun claim_reward<T>(game: &mut Game<T>, ctx:&mut TxContext){
         let sender = ctx.sender();
         assert!(table::contains(&game.reward_by_player,sender),ENotQualified);
         let bm_balance = *table::borrow_mut(&mut game.reward_by_player,sender);
-        let reward = coin::take<SUI>(&mut game.total_reward, bm_balance, ctx);
+        let reward = coin::take<T>(&mut game.total_reward, bm_balance, ctx);
         
         //let reward = coin::from_balance(bm_balance,ctx);
         transfer::public_transfer(reward,sender);
