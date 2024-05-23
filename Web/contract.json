@@ -10,5 +10,9 @@
   {
     "type": "package",
     "id": "0xb69f7dfe4fa9e500b81364cbba32a0d55ca08b792de8e8538f18df7e6504fda2"
+  },
+  {
+    "FudCoin":"0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017",
+    "shared":"0x2ac9063e4b39d70bd056ae288bf7aae53271612a3ec56714e2dc30f9bd82e0fc"
   }
 ]

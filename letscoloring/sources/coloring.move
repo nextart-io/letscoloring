@@ -17,6 +17,7 @@ module letscoloring::coloring{
     const EOutOfRange: u64 = 2;
     const EGameEnded: u64 = 3;
     const EIllegalColor:u64 = 4;
+    const ENotQualified:u64 = 5;
 
     //Events
     public struct GameCreateEvent has copy, drop {
@@ -56,6 +57,7 @@ module letscoloring::coloring{
         colors:vector<vector<u8>>,
         grids: vector<vector<Grid>>,
         total_reward: Balance<SUI>,
+        reward_by_player:Table<address,u64>,
         grid_player: vector<vector<address>>,
     }
 
@@ -65,6 +67,7 @@ module letscoloring::coloring{
         description: String,
         link: String,
         url: Url,
+        points: u64
     }
 
     //record ticket info for further activity
@@ -116,7 +119,7 @@ module letscoloring::coloring{
         while (j > 0) {
             let grid = Grid {
                 filled: false,
-                color: string::utf8(b"FFFFFF"),
+                color: string::utf8(b"#FFFFFF"),
             };
             vector::push_back(&mut grids_1d, grid);
             vector::push_back(&mut addr_1d, @hold);
@@ -137,6 +140,7 @@ module letscoloring::coloring{
             colors,
             grids: grids_2d,
             total_reward: balance::zero(),
+            reward_by_player:table::new(ctx),
             grid_player: addr_2d,
         };
 
@@ -201,11 +205,11 @@ module letscoloring::coloring{
         ticket_info:&mut RecordTicketInfo,
         ctx:&mut TxContext
     ) {
-        assert!(!vector::contains(&game.colors,&new_color),EIllegalColor);
+        assert!(vector::contains(&game.colors,&new_color),EIllegalColor);
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users, sender)){
-            let ticket = create_ticket(ticket_info, ctx);            
+            let ticket = create_ticket(ticket_info, ctx);          
             transfer::transfer(ticket, sender);
         };
         game.cnt = game.cnt - 1;
@@ -231,6 +235,7 @@ module letscoloring::coloring{
             description: string::utf8(b"Early-stage activity for NexTheater"),
             link: string::utf8(b"https://coloring.nextheater.xyz"),
             url: url::new_unsafe_from_bytes(b"https://blush-left-firefly-321.mypinata.cloud/ipfs/QmbLCxFoe9E55vgB9m4HFYeq1rxYa3wm5RDKY3tKSPwXc4"),
+            points: 0
         };
         table::add(&mut ticket_info.users, ctx.sender(), object::id(&ticket));            
         ticket
@@ -343,7 +348,7 @@ module letscoloring::coloring{
             let player = max_player_vec[i];
             let cur_player_cnt = *table::borrow<address, u64>(&max_color_player_cnt, player);
             let reward_value: u64 = total_reward * 7 * cur_player_cnt / (10 * max_player_cnt);
-            let reward = coin::take<SUI>(&mut game.total_reward, reward_value, ctx);
+            //let reward = coin::take<SUI>(&mut game.total_reward, reward_value, ctx);
             event::emit(RewardEvent {
                 game: object::id(game),
                 player,
@@ -352,7 +357,10 @@ module letscoloring::coloring{
                 color: color_max,
                 count: cur_player_cnt,
             });
-            transfer::public_transfer(reward, player);
+
+            update_game_reward_table(game,reward_value,player);
+            
+            //transfer::public_transfer(reward, player);
             i = i + 1;
         };
 
@@ -362,7 +370,7 @@ module letscoloring::coloring{
             let player = min_player_vec[i];
             let cur_player_cnt = *table::borrow<address, u64>(&min_color_player_cnt, player);
             let reward_value: u64 = total_reward * 3 * cur_player_cnt / (10 * min_player_cnt);
-            let reward = coin::take<SUI>(&mut game.total_reward, reward_value, ctx);
+            //let reward = coin::take<SUI>(&mut game.total_reward, reward_value, ctx);
             event::emit(RewardEvent {
                 game: object::id(game),
                 player,
@@ -371,13 +379,14 @@ module letscoloring::coloring{
                 color: color_min,
                 count: cur_player_cnt,
             });
-            transfer::public_transfer(reward, player);
+            update_game_reward_table(game,reward_value,player);
+            //transfer::public_transfer(reward, player);
             i = i + 1;
         };
 
-        let remain_value = balance::value<SUI>(&game.total_reward);
-        let reward = coin::take<SUI>(&mut game.total_reward, remain_value, ctx);
-        transfer::public_transfer(reward, ctx.sender());
+        //let remain_value = balance::value<SUI>(&game.total_reward);
+        //let reward = coin::take<SUI>(&mut game.total_reward, remain_value, ctx);
+        //transfer::public_transfer(reward, ctx.sender());
 
         game.grids = vector::empty<vector<Grid>>();
         game.grid_player = vector::empty<vector<address>>();
@@ -385,6 +394,26 @@ module letscoloring::coloring{
         table::drop<String, u64>(color_cnt);
         table::drop<address, u64>(max_color_player_cnt);
         table::drop<address, u64>(min_color_player_cnt);
+    }
+
+    fun update_game_reward_table(game: &mut Game,new_value:u64,player:address){
+        if(table::contains(&game.reward_by_player,player)){
+                let bm_balance = table::borrow_mut(&mut game.reward_by_player,player);
+                *bm_balance = *bm_balance + new_value;
+        }else{
+                table::add(&mut game.reward_by_player,player,new_value);
+        };
+    }
+
+    #[allow(lint(self_transfer))]
+    public fun claim_reward(game: &mut Game, ctx:&mut TxContext){
+        let sender = ctx.sender();
+        assert!(table::contains(&game.reward_by_player,sender),ENotQualified);
+        let bm_balance = *table::borrow_mut(&mut game.reward_by_player,sender);
+        let reward = coin::take<SUI>(&mut game.total_reward, bm_balance, ctx);
+        
+        //let reward = coin::from_balance(bm_balance,ctx);
+        transfer::public_transfer(reward,sender);
     }
 
 

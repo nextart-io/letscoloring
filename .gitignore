@@ -16,6 +16,7 @@
 # production
 /Web/build
 /letscoloring/build
+/fudcoin/build
 
 # misc
 .DS_Store
