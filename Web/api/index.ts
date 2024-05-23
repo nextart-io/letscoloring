@@ -1,13 +1,21 @@
 import { bcs } from "@mysten/bcs";
-import { GetObjectParams, SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions"
+import {
+  GetObjectParams,
+  SuiClient,
+  SuiObjectResponse,
+} from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
-const Package = "0x71a15b0caad761a888efd500bf7c773806a97915e3af894a1a2cb6866a8c6466";
+const Package =
+  "0x71a15b0caad761a888efd500bf7c773806a97915e3af894a1a2cb6866a8c6466";
 const Gm = "0x4ff60acab8d171f8bbeb68f18536979ae4a90b06d2151f220ea91a17056e6a9a";
-const Rt = "0xdf77f6ef130760dd4fce4ed2bcc0c7736d435ba9f687e83c73122827578e5529gi";
-const Coin_Package = "0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017";
-const Coin_Treasury = "0x2ac9063e4b39d70bd056ae288bf7aae53271612a3ec56714e2dc30f9bd82e0fc";
-const Coin_Type = "0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017::Coin::COIN"
+const Rt = "0xdf77f6ef130760dd4fce4ed2bcc0c7736d435ba9f687e83c73122827578e5529";
+const Coin_Package =
+  "0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017";
+const Coin_Treasury =
+  "0x2ac9063e4b39d70bd056ae288bf7aae53271612a3ec56714e2dc30f9bd82e0fc";
+const Coin_Type =
+  "0x74160e8d5b214fda1d11129b93a0b56a1b7ca3d37dc847863d0b660ab90f6017::Coin::COIN";
 
 /*
 public entry fun mint(
@@ -18,27 +26,29 @@ public entry fun mint(
     )
 */
 export const getTestCoin = (recipient: string): TransactionBlock => {
-    const txb = new TransactionBlock();
-    txb.moveCall({
-        target: `${Coin_Package}::Coin::mint`,
-        arguments: [
-            txb.object(`${Coin_Treasury}`),
-            txb.pure(`100000`),
-            txb.pure(recipient)
-        ]
-    });
-    return txb
-}
+  const txb = new TransactionBlock();
+  txb.moveCall({
+    target: `${Coin_Package}::Coin::mint`,
+    arguments: [
+      txb.object(`${Coin_Treasury}`),
+      txb.pure(`100000`),
+      txb.pure(recipient),
+    ],
+  });
+  return txb;
+};
 // 初始化可以通过 Gm 取 Game ID
-export const getGameId = async (client: SuiClient): Promise<SuiObjectResponse> => {
-    const params: GetObjectParams = {
-        id: Gm,
-        options: {
-            showContent: true,
-        }
-    }
-    return await client.getObject(params);
-}
+export const getGameId = async (
+  client: SuiClient
+): Promise<SuiObjectResponse> => {
+  const params: GetObjectParams = {
+    id: Gm,
+    options: {
+      showContent: true,
+    },
+  };
+  return await client.getObject(params);
+};
 
 /*public fun start_new_game(
     gm: &mut GameManager, 
@@ -48,25 +58,27 @@ export const getGameId = async (client: SuiClient): Promise<SuiObjectResponse> =
     colors:vector<vector<u8>>,
     ctx: &mut TxContext
 )*/
-export const StartNewGame = (payment: string, rows: string, cols: string, color: string[]): TransactionBlock => {
+export const StartNewGame = (
+  payment: string,
+  rows: string,
+  cols: string,
+  color: string[]
+): TransactionBlock => {
+  const txb = new TransactionBlock();
+  txb.moveCall({
+    target: `${Package}::coloring::start_new_game`,
+    arguments: [
+      txb.object(`${Gm}`),
+      txb.pure.u64(payment),
+      txb.pure.u64(rows),
+      txb.pure.u64(cols),
+      txb.pure(bcs.vector(bcs.string()).serialize(color)),
+    ],
+    typeArguments: [`${Coin_Type}`],
+  });
 
-    const txb = new TransactionBlock();
-    txb.moveCall({
-        target: `${Package}::coloring::start_new_game`,
-        arguments: [
-            txb.object(`${Gm}`),
-            txb.pure.u64(payment),
-            txb.pure.u64(rows),
-            txb.pure.u64(cols),
-            txb.pure(bcs.vector(bcs.string()).serialize(color))
-        ],
-        typeArguments:[
-            `${Coin_Type}`,
-        ]
-    })
-
-    return txb;
-}
+  return txb;
+};
 
 /* public fun fill_grid(
         game: &mut Game,
@@ -80,80 +92,91 @@ export const StartNewGame = (payment: string, rows: string, cols: string, color:
 */
 
 export const FillGridUsingCustomToken = async (
-    game: string,
-    payment: bigint,
-    row: string,
-    col: string,
-    new_color: string,
-    address: string,
-    client: SuiClient,
+  game: string,
+  payment: bigint,
+  row: string,
+  col: string,
+  new_color: string,
+  address: string,
+  client: SuiClient
 ) => {
-    const txb = new TransactionBlock();
-    let getCoinInfo = await client.getCoins({
-        owner: address,         
-        coinType:Coin_Type,
-    });
-    if (!getCoinInfo.data[0]) {
-        throw new Error("Insufficient balance for this Coin");
-    }
-    const [primaryCoin, ...mergeCoins] = getCoinInfo.data;
-    const primaryCoinInput = txb.object(primaryCoin.coinObjectId);
-    if (mergeCoins.length) {
-        txb.mergeCoins(primaryCoinInput, mergeCoins.map((coin) => txb.object(coin.coinObjectId)));
-    }
+  const txb = new TransactionBlock();
+  let getCoinInfo = await client.getCoins({
+    owner: address,
+    coinType: Coin_Type,
+  });
+  if (!getCoinInfo.data[0]) {
+    throw new Error("Insufficient balance for this Coin");
+  }
+  const [primaryCoin, ...mergeCoins] = getCoinInfo.data;
+  const primaryCoinInput = txb.object(primaryCoin.coinObjectId);
+  if (mergeCoins.length) {
+    txb.mergeCoins(
+      primaryCoinInput,
+      mergeCoins.map((coin) => txb.object(coin.coinObjectId))
+    );
+  }
 
+  const coin = txb.splitCoins(primaryCoinInput, [txb.pure(payment)]);
 
-    const coin = txb.splitCoins(primaryCoinInput, [txb.pure(payment)]);
+  txb.moveCall({
+    target: `${Package}::coloring::fill_grid`,
+    arguments: [
+      txb.object(game),
+      txb.object(coin),
+      txb.pure.u64(row),
+      txb.pure.u64(col),
+      txb.pure(
+        Array.from(bcs.string().serialize(new_color).toBytes().subarray(1))
+      ),
+      txb.object(Rt),
+    ],
+    typeArguments: [`${Coin_Type}`],
+  });
+  txb.transferObjects([coin], address);
+  return txb;
+};
 
-    txb.moveCall({
-        target: `${Package}::coloring::fill_grid`,
-        arguments: [
-            txb.object(game),
-            txb.object(coin),
-            txb.pure.u64(row),
-            txb.pure.u64(col),
-            txb.pure(bcs.string().serialize(new_color).toBytes().toString()),
-            txb.object(Rt)
-        ]
-    })
-    txb.transferObjects([coin], address);
-    return txb;
-}
+export const FillGrid = (
+  game: string,
+  payment: string,
+  row: string,
+  col: string,
+  new_color: string,
+  address: string
+) => {
+  const txb = new TransactionBlock();
+  let [coin] = txb.splitCoins(txb.gas, [payment]);
 
-export const FillGrid = (game: string, payment: string, row: string, col: string, new_color: string, address: string) => {
-    const txb = new TransactionBlock();
-    let [coin] = txb.splitCoins(txb.gas, [payment])
-
-    txb.moveCall({
-        target: `${Package}::coloring::fill_grid`,
-        arguments: [
-            txb.object(game),
-            txb.object(coin),
-            txb.pure.u64(row),
-            txb.pure.u64(col),
-            txb.pure(bcs.string().serialize(new_color).toBytes().toString()),
-            txb.object(Rt)
-        ]
-    })
-    txb.transferObjects([coin], address);
-    return txb;
-}
+  txb.moveCall({
+    target: `${Package}::coloring::fill_grid`,
+    arguments: [
+      txb.object(game),
+      txb.object(coin),
+      txb.pure.u64(row),
+      txb.pure.u64(col),
+      txb.pure(bcs.string().serialize(new_color).toBytes().toString()),
+      txb.object(Rt),
+    ],
+  });
+  txb.transferObjects([coin], address);
+  return txb;
+};
 /*
 public fun settlement(
         game: &mut Game, 
         ctx: &mut TxContext
 */
 export const Settlement = (game: string) => {
-    const txb = new TransactionBlock();
-    txb.moveCall({
-        target: `${Package}::coloring::settlement`,
-        arguments: [
-            txb.object(`${game}`)
-        ]
-    })
+  const txb = new TransactionBlock();
+  txb.moveCall({
+    target: `${Package}::coloring::settlement`,
+    arguments: [txb.object(`${game}`)],
+    typeArguments: [`${Coin_Type}`],
+  });
 
-    return txb;
-}
+  return txb;
+};
 
 /*
     public struct Game has key, store {
@@ -169,12 +192,15 @@ export const Settlement = (game: string) => {
     }
 
 */
-export const getGameInfo = async (client: SuiClient, game_id: string): Promise<SuiObjectResponse> => {
-    const params: GetObjectParams = {
-        id: game_id,
-        options: {
-            showContent: true,
-        }
-    }
-    return await client.getObject(params);
-}
+export const getGameInfo = async (
+  client: SuiClient,
+  game_id: string
+): Promise<SuiObjectResponse> => {
+  const params: GetObjectParams = {
+    id: game_id,
+    options: {
+      showContent: true,
+    },
+  };
+  return await client.getObject(params);
+};

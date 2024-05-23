@@ -23,14 +23,14 @@ function ColorItem({ color, children, openPickColor }: ColorItemProps) {
     if (!currentAccount) {
       setOpenConnect(true);
       return;
-    }    
-    // 已被选
-    if (color !== "#FFFFFF") {
-      showToast("has been choised !");
+    }
+
+    if (color === "#FFFFFF" || color === "") {
+      openPickColor();
       return;
     }
 
-    openPickColor();
+    showToast("has been choised !");
   };
 
   return (
