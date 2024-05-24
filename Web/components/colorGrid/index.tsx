@@ -76,7 +76,6 @@ function ColorGrid() {
         onSuccess: (res) => {
           showToast("Success !");
           fetchData();
-          settlement(res);
           setOpenColor(false);
         },
         onError: (err) => {
@@ -87,33 +86,6 @@ function ColorGrid() {
         },
       }
     );
-  };
-
-  // 结算
-  const settlement = (res:any) => {
-    console.log("res===>", res);
-    console.log("data===>", data);
-    // if (data?.unfilled_grid === "0") {
-    //   const txb = Settlement(data?.id);
-
-    //   signAndExecuteTransactionBlock(
-    //     {
-    //       transactionBlock: txb,
-    //       options: {
-    //         showEffects: true,
-    //       },
-    //     },
-    //     {
-    //       onSuccess: (res) => {
-    //         showToast("Success !");
-    //       },
-    //       onError: (err) => {
-    //         showToast("Tx Failed!");
-    //         console.log(err);
-    //       },
-    //     }
-    //   );
-    // }
   };
 
   return (
