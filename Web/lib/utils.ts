@@ -1,6 +1,7 @@
+import { getRewardPlayer } from "@/api";
 import { GameData } from "@/types";
+import { SuiClientContext, useSuiClient } from "@mysten/dapp-kit";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
-import { SUI_DECIMALS } from "@mysten/sui.js/utils";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -17,12 +18,15 @@ export const string2Uint8Array = (str: string): Uint8Array => {
   return new Uint8Array(str.split(",").map(Number));
 };
 
-export const formatGameResponseData = (response: SuiObjectResponse) => {
+
+export const formatGameResponseData = async (response: SuiObjectResponse) => {
   // Format the data as needed
   const content = response?.data?.content as any;
-  if (content) {
+  if (content) {    
     const fields = content.fields;
     const unfilled_grid = fields.cnt;
+    const reward_by_player_id = content.fields.reward_by_player.fields.id.id;
+    console.log(reward_by_player_id);
     const formatColors = fields.colors.map((color: any) => {
       return unit8Array2String(new Uint8Array(color));
     });

@@ -49,7 +49,7 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
         id: last_game_id!,
       });
 
-      const formattedData = formatGameResponseData(response);
+      const formattedData = await formatGameResponseData(response);
       console.log(formattedData);
       setData(formattedData);
     } catch (err) {

@@ -3,12 +3,14 @@
 import React from "react";
 import { CirclePicker } from "react-color";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useGameData } from "@/components/GameDataProvider";
+import { GameData } from "@/types";
 
 interface PickColorProps {
   pickColors: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  changeColor: (color: string) => void;
+  changeColor: (color: string,data:GameData) => void;
 }
 
 function PickColor({
@@ -17,8 +19,9 @@ function PickColor({
   pickColors = [], // 假设 pickColors 没有默认值
   changeColor,
 }: PickColorProps) {
-  const handleColorChange = (color: { hex: string }) => {
-    changeColor(color.hex);
+  const {data} = useGameData()
+  const handleColorChange = async (color: { hex: string }) => {
+     await changeColor(color.hex,data!);
   };
 
   return (

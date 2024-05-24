@@ -18,29 +18,6 @@ const ScreenElements = () => {
 
   const total_reward = (data?.total_reward as unknown as number) / 1000;
 
-  // 结算
-  const settlement = () => {
-    if ((data?.unfilled_grid as unknown as number) < 1) {
-      const txb = Settlement(data?.id as string);
-      signAndExecuteTransactionBlock(
-        {
-          transactionBlock: txb,
-          options: {},
-        },
-        {
-          onSuccess: () => {
-            fetchData();
-            showToast("Success !");
-          },
-          onError: (err) => {
-            showToast("Tx Failed!");
-            console.log(err);
-          },
-        }
-      );
-    }
-  };
-
   return (
     <div className="relative">
       <Image
@@ -85,7 +62,7 @@ const ScreenElements = () => {
         {total_reward > 0 && (
           <div className="text-red-500">Total Reward : {total_reward} FUD</div>
         )}
-        {account && (data?.unfilled_grid as unknown as number) < 1 && (
+        {/* {account && (data?.unfilled_grid as unknown as number) < 1 && (
           <Button
             className="w-2/4 mt-2 rounded-full relative"
             onClick={settlement}
@@ -99,7 +76,7 @@ const ScreenElements = () => {
               className="absolute -top-5 left-32 pointer-events-none"
             ></Image>
           </Button>
-        )}
+        )} */}
       </div>
     </div>
   );

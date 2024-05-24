@@ -21,15 +21,13 @@ function StartGame() {
   const { showToast } = useToast();
   const router = useRouter();
 
-  const client = new SuiClient({ url: getFullnodeUrl("testnet") });
-
   const [openConnect, setOpenConnect] = useState(false);
 
   const handleStartGame = () => {
-    if (!currentAccount) {
-      setOpenConnect(true);
-      return;
-    }
+      if (!currentAccount) {
+        setOpenConnect(true);
+        return;
+      }
     
     // 创建 4 * 4 格子，随机 3 个颜色
     const txb: TransactionBlock  = StartNewGame(
@@ -48,17 +46,18 @@ function StartGame() {
       },
       {
         onSuccess: (res: any) => {
-          const game_address = res.events[0]?.parsedJson?.game_address;
+          showToast("Lets Gaming !")
+          // const game_address = res.events[0]?.parsedJson?.game_address;
 
-          if (game_address) {
-            getGameInfo(client, game_address).then((res2) => {
-              showToast("Lets Gaming !");
-              const gameId = res2.data?.objectId;
+          // if (game_address) {
+          //   getGameInfo(client, game_address).then((res2) => {
+          //     showToast("Lets Gaming !");
+          //     const gameId = res2.data?.objectId;
 
-              console.log("res2===>", res2, gameId);
-              router.replace(`/${gameId}`);
-            });
-          }
+          //     console.log("res2===>", res2, gameId);
+          //     router.replace(`/${gameId}`);
+          //   });
+          // }
         },
         onError: (err) => {
           showToast("Tx Failed!");
@@ -69,11 +68,11 @@ function StartGame() {
   };
 
   return (
+    currentAccount?.address=="0x2eb40a1c825b4ead061e8cc6be55a9a010a81a31cef89a23cbdfaee8ade6cf1c"&&
     <ConnectModal
       trigger={
         <div
           className="flex justify-center items-center"
-          style={{ marginTop: "-20%" }}
         >
           <div
             className="text-4xl font-bold cursor-pointer"

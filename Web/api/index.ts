@@ -5,6 +5,7 @@ import {
   SuiObjectResponse,
 } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { isValidSuiObjectId } from "@mysten/sui.js/utils";
 
 const Package =
   "0x851947332fd8a977fbaa82dc841e9ec805a83987d0cfa57e331c4e3de9d12e1d";
@@ -42,7 +43,7 @@ export const getTestCoin = (recipient: string): TransactionBlock => {
 export const claimReward = (gameId:string) =>{
   const txb = new TransactionBlock();
   txb.moveCall({
-    target: `${Coin_Package}::Coin::claim_reward`,
+    target: `${Package}::coloring::claim_reward`,
     arguments: [
       txb.object(`${gameId}`),
     ],
@@ -62,6 +63,16 @@ export const getGameId = async (
   };
   return await client.getObject(params);
 };
+
+export const getRewardPlayer = async (id:string,client:SuiClient) =>{
+  if(!isValidSuiObjectId(id)) return;
+  const data = await client.getDynamicFields(
+    {
+      parentId: `${id}`,
+    }
+  )
+  console.log(data)
+}
 
 export const getLastGameId = async (client: SuiClient) => {
   const gm_object_id = await client.getObject({
@@ -216,15 +227,12 @@ public fun settlement(
         game: &mut Game, 
         ctx: &mut TxContext
 */
-export const Settlement = (game: string) => {
-  const txb = new TransactionBlock();
+export const Settlement = (game: string,txb:TransactionBlock) => {
   txb.moveCall({
     target: `${Package}::coloring::settlement`,
     arguments: [txb.object(`${game}`)],
     typeArguments: [`${Coin_Type}`],
   });
-
-  return txb;
 };
 
 /*
