@@ -16,6 +16,8 @@ const ScreenElements = () => {
   const { mutate: signAndExecuteTransactionBlock } =
     useSignAndExecuteTransactionBlock();
 
+  const total_reward = (data?.total_reward as unknown as number) / 1000;
+
   // 结算
   const settlement = () => {
     if ((data?.unfilled_grid as unknown as number) < 1) {
@@ -78,13 +80,27 @@ const ScreenElements = () => {
         height={100}
         className="fixed bottom-1 right-1"
       ></Image>
-      {(data?.unfilled_grid as unknown as number) < 1 && (
-        <div className="fixed w-1/3 p-10 left-1/3 bottom-20 rounded-3xl bg-red-100 flex justify-center items-center">
-          <Button className="w-2/4 rounded-full" onClick={settlement}>
+
+      <div className="fixed w-1/3 px-10 py-5 left-1/3 bottom-20 rounded-3xl bg-red-100 flex flex-col justify-center items-center">
+        {total_reward > 0 && (
+          <div className="text-red-500">Total Reward : {total_reward} FUD</div>
+        )}
+        {account && (data?.unfilled_grid as unknown as number) < 1 && (
+          <Button
+            className="w-2/4 mt-2 rounded-full relative"
+            onClick={settlement}
+          >
             Settlement
+            <Image
+              src={"/images/arrow.gif"}
+              alt={"arrow"}
+              width={150}
+              height={150}
+              className="absolute -top-5 left-32 pointer-events-none"
+            ></Image>
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
