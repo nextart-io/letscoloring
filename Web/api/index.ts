@@ -71,6 +71,8 @@ export const getLastGameId = async (client: SuiClient) => {
     return game.objectId
   });
 
+  if(!total_games.length) return;
+
   const last_game_object = await client.getObject({
     id:total_games.at(-1)!,
     options:{
