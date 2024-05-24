@@ -37,6 +37,19 @@ export const getTestCoin = (recipient: string): TransactionBlock => {
   });
   return txb;
 };
+
+//public fun claim_reward<T>(game: &mut Game<T>, ctx:&mut TxContext)
+export const claimReward = (gameId:string) =>{
+  const txb = new TransactionBlock();
+  txb.moveCall({
+    target: `${Coin_Package}::Coin::claim_reward`,
+    arguments: [
+      txb.object(`${gameId}`),
+    ],
+    typeArguments: [`${Coin_Type}`],
+  });
+  return txb;
+}
 // 初始化可以通过 Gm 取 Game ID
 export const getGameId = async (
   client: SuiClient
