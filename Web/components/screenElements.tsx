@@ -65,11 +65,11 @@ const ScreenElements = () => {
         className="fixed top-1/3 left-10 scale-x-[-1]"
       ></Image>
       <Image
-        src={"/images/head.gif"}
-        alt={"head"}
+        src={"/images/peach.webp"}
+        alt={"peach"}
         width={200}
         height={100}
-        className="fixed bottom-1 left-1 scale-x-[-1]"
+        className="fixed bottom-1 left-5 animate-pulse"
       ></Image>
       <Image
         src={"/images/head.gif"}
