@@ -216,8 +216,9 @@ module letscoloring::coloring{
             let ticket = create_ticket(ticket_info, ctx);          
             transfer::transfer(ticket, sender);
         };
-        game.cnt = game.cnt - 1;
+
         assert!(game.cnt > 0, EGameEnded);
+        game.cnt = game.cnt - 1;
         assert!(row < game.rows && col < game.cols, EOutOfRange);
         let grid_b = borrow_grid(game, row, col);
         assert!(!get_grid_filled(grid_b), EGridAlreadyFilled);
