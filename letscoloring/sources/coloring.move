@@ -1,14 +1,13 @@
-module letscoloring::coloring{
+module letscoloring::game{
     use sui::coin::{Self, Coin};
-    use sui::url::{Url};
     use sui::balance::{Self, Balance};
     use sui::package;
     use sui::display;
     use std::string::{String, Self};
-    use sui::url;
     use sui::table::{Self, Table};
     use sui::table_vec::{Self, TableVec};
     use sui::event;
+    use letscoloring::ticket::{Ticket,Self};
     
     
     //Error
@@ -40,7 +39,7 @@ module letscoloring::coloring{
         min_color: String,
     }
 
-    public struct COLORING has drop{}
+    public struct GAME has drop{}
 
     public struct GameManager has key, store {
         id: UID,
@@ -61,15 +60,6 @@ module letscoloring::coloring{
         grid_player: vector<vector<address>>,
     }
 
-    public struct Ticket has key {
-        id: UID,
-        name: String,
-        description: String,
-        link: String,
-        url: Url,
-        points: u64
-    }
-
     //record ticket info for further activity
     public struct RecordTicketInfo has key, store {
         id: UID,
@@ -82,7 +72,7 @@ module letscoloring::coloring{
         color: String,
     }    
 
-    fun init(otw: COLORING, ctx: &mut TxContext) {
+    fun init(otw: GAME, ctx: &mut TxContext) {
         let publisher = package::claim(otw,ctx);
         let display = display::new<Ticket>(&publisher,ctx);
         let gm = GameManager {
@@ -213,8 +203,7 @@ module letscoloring::coloring{
         let sender = ctx.sender();
         //if ticket is not exsist,creat a new ticket and transfer to sender
         if(!table::contains(&ticket_info.users, sender)){
-            let ticket = create_ticket(ticket_info, ctx);          
-            transfer::transfer(ticket, sender);
+            record_ticket(ticket_info, ctx);
         };
 
         assert!(game.cnt > 0, EGameEnded);
@@ -233,17 +222,10 @@ module letscoloring::coloring{
     }
 
 
-    fun create_ticket(ticket_info:&mut RecordTicketInfo,ctx:&mut TxContext):Ticket{
-        let ticket = Ticket{
-            id: object::new(ctx),
-            name: string::utf8(b"Let's Coloring Ticket"),
-            description: string::utf8(b"Early-stage activity for NexTheater"),
-            link: string::utf8(b"https://coloring.nextheater.xyz"),
-            url: url::new_unsafe_from_bytes(b"https://blush-left-firefly-321.mypinata.cloud/ipfs/QmbLCxFoe9E55vgB9m4HFYeq1rxYa3wm5RDKY3tKSPwXc4"),
-            points: 0
-        };
+    fun record_ticket(ticket_info:&mut RecordTicketInfo,ctx:&mut TxContext){
+        let ticket = ticket::create_ticket(ctx);
         table::add(&mut ticket_info.users, ctx.sender(), object::id(&ticket));            
-        ticket
+        ticket::transfer_ticket(ticket,ctx.sender());
     }
 
     #[allow(lint(self_transfer))]
@@ -425,7 +407,7 @@ module letscoloring::coloring{
     //test
     #[test_only]
     public fun init_for_testing(ctx:&mut TxContext){
-        let otw = COLORING{};
+        let otw = GAME{};
         init(otw,ctx);
     }
 }
