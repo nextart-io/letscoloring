@@ -3,6 +3,9 @@ module letscoloring::ticket{
     use sui::display;
     use std::string::{String,Self};
     use sui::url::{Url,Self};
+    use sui::table::{Self,Table};
+
+    const ENotExsist:u64 = 0;
     
     public struct AdminCap has key,store{
         id:UID,
@@ -17,6 +20,24 @@ module letscoloring::ticket{
         link: String,
         url: Url,
         points: u64
+    }
+
+    public struct Table_UserTicket has key, store{
+        id:UID,
+        data: Table<address,ID>
+    }
+
+    public fun is_user_validate(t:&Table_UserTicket,user:address):bool {
+        table::contains(&t.data,user)
+    }
+
+    public fun get_ticket_id(t:&Table_UserTicket,user:address):&ID{
+        assert!(is_user_validate(t,user),ENotExsist);
+        table::borrow(&t.data,user)
+    }
+
+    public(package) fun set_table(t:&mut Table_UserTicket,user:address,ticket_id:ID){
+        table::add(&mut t.data,user,ticket_id);
     }
 
     public(package) fun create_ticket(ctx:&mut TxContext):Ticket{
@@ -34,7 +55,7 @@ module letscoloring::ticket{
     public(package) fun transfer_ticket(ticket:Ticket,recipient:address){
         transfer::transfer(ticket,recipient);
     }
-
+    
     public fun increase_points(_:&AdminCap,ticket:&mut Ticket,amount:u64){
         ticket.points = ticket.points + amount;
     }
@@ -60,6 +81,11 @@ module letscoloring::ticket{
     fun init(otw: TICKET, ctx: &mut TxContext) {
         let publisher = package::claim(otw,ctx);
         let display = display::new<Ticket>(&publisher,ctx);
+
+        transfer::share_object(Table_UserTicket{
+            id:object::new(ctx),
+            data:table::new<address,ID>(ctx)
+        });
 
         transfer::public_transfer(AdminCap{
             id:object::new(ctx),
