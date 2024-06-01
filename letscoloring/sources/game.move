@@ -1,12 +1,11 @@
 module letscoloring::game{
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Balance};
-    use sui::package;
-    use sui::display;
     use std::string::{String, Self};
     use sui::table::{Self, Table};
     use sui::table_vec::{Self, TableVec};
     use sui::event;
+    use sui::random::{Self,Random};
     use letscoloring::ticket::{Table_UserTicket,Ticket,Self};
     
     
@@ -66,7 +65,7 @@ module letscoloring::game{
     }
 
     // Open to start
-    public fun start_new_game<T>(
+    entry fun start_new_game<T>(
         gm: &mut GameManager, 
         payment: u64, 
         grids_amount:u64,
@@ -106,8 +105,55 @@ module letscoloring::game{
         transfer::share_object(game);
     } 
 
+    entry fun fill_grid<T>(
+        game: &mut Game<T>,
+        token: &mut Coin<T>,
+        r: &Random,
+        new_color: String,
+        table_user_ticket:&mut Table_UserTicket,
+        ctx:&mut TxContext
+    ) {
+
+        //Random a Index:
+        let mut unfilled_grids_index =  vector::empty<u64>();
+        let mut i = 0;
+
+        while(i < game.cnt) {
+            let grid = vector::borrow(&game.grids,i);
+            if(!grid.filled){
+               vector::push_back(&mut unfilled_grids_index,i);
+            };
+            i = i + 1;
+        };
+        
+        let mut generator = random::new_generator(r,ctx);
+        let index_r = random::generate_u64_in_range(&mut generator,0,unfilled_grids_index.length());
+        let index = *vector::borrow(&unfilled_grids_index,index_r);
+        //End Random
+
+        assert!(vector::contains(&game.init_colors,&new_color),EIllegalColor);
+        let sender = ctx.sender();
+        //if ticket is not exsist,creat a new ticket and transfer to sender
+        if(!ticket::is_user_validate(table_user_ticket,sender)){
+            let t = ticket::create_ticket(ctx);
+            ticket::set_table(table_user_ticket,sender, object::id(&t));
+            ticket::transfer_ticket(t,sender);
+        };
+
+        assert!(game.cnt > 0, EGameEnded);
+        game.cnt = game.cnt - 1;
+        let grid_bm = borrow_mut_grid(game, index);
+        assert!(!get_grid_filled(grid_bm), EGridAlreadyFilled);
+        
+        set_grid_filled(grid_bm);
+        set_grid_color(grid_bm, new_color);
+
+        let game_coin = coin::split(token, game.payment, ctx);
+        balance::join<T>(&mut game.total_reward, coin::into_balance(game_coin));
+    }
+
     public fun borrow_grid<T>(game: &Game<T>, index:u64): &Grid {
-        assert!(index < game.cnt, EOutOfRange);
+        assert!(index < game.init_colors.length(), EOutOfRange);
         let tg_grid = vector::borrow<Grid>(&game.grids, index);
         tg_grid
     }
@@ -121,7 +167,7 @@ module letscoloring::game{
     }
 
     public fun borrow_mut_grid<T>(game: &mut Game<T>, index: u64): &mut Grid {
-        assert!(index < game.cnt, EOutOfRange);
+        assert!(index < game.grids.length(), EOutOfRange);
         let tg_grid = vector::borrow_mut<Grid>(&mut game.grids,index);
         tg_grid
     }
@@ -133,40 +179,6 @@ module letscoloring::game{
     fun set_grid_color(grid: &mut Grid, color: String) {
         grid.color = color;
     }
-
-    // public fun fill_grid<T>(
-    //     ticket:&mut Ticket,
-    //     game: &mut Game<T>,
-    //     token: &mut Coin<T>,
-    //     row: u64,
-    //     col: u64,
-    //     new_color: vector<u8>,
-    //     table_user_ticket:&mut Table_UserTicket,
-    //     ctx:&mut TxContext
-    // ) {
-    //     assert!(vector::contains(&game.colors,&new_color),EIllegalColor);
-    //     let sender = ctx.sender();
-    //     //if ticket is not exsist,creat a new ticket and transfer to sender
-    //     if(!ticket::is_user_validate(table_user_ticket,sender)){
-    //         let t = ticket::create_ticket(ctx);
-    //         ticket::set_table(table_user_ticket,sender, object::id(&t));
-    //         ticket::transfer_ticket(t,sender);
-    //     };
-
-    //     assert!(game.cnt > 0, EGameEnded);
-    //     game.cnt = game.cnt - 1;
-    //     assert!(row < game.rows && col < game.cols, EOutOfRange);
-    //     let grid_b = borrow_grid(game, row, col);
-    //     assert!(!get_grid_filled(grid_b), EGridAlreadyFilled);
-
-    //     let game_coin = coin::split(token, game.payment, ctx);
-    //     balance::join<T>(&mut game.total_reward, coin::into_balance(game_coin));
-        
-    //     let grid_bm = borrow_mut_grid(game, row, col);
-    //     set_grid_filled(grid_bm);
-    //     set_grid_color(grid_bm, string::utf8(new_color));
-    //     set_player(game, row, col, ctx);
-    // }
 
 
     // #[allow(lint(self_transfer))]
@@ -347,8 +359,7 @@ module letscoloring::game{
 
     //test
     #[test_only]
-    public fun init_for_testing(ctx:&mut TxContext){
-        let otw = GAME{};
-        init(otw,ctx);
+    public fun init_for_testing(ctx:&mut TxContext){        
+        init(ctx);
     }
 }
