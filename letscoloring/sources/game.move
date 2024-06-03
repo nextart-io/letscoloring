@@ -44,6 +44,7 @@ module letscoloring::game{
         init_colors:vector<String>,
         grids: vector<Grid>,
         total_reward: Balance<T>,
+        grid_reward:Balance<T>,
         reward_by_player:Table<address,u64>,
     }
 
@@ -52,6 +53,7 @@ module letscoloring::game{
         filled: bool,
         player:address,
         color: String,
+        reward:u64,
     }    
 
     fun init(ctx: &mut TxContext) {
@@ -68,7 +70,9 @@ module letscoloring::game{
     entry fun start_new_game<T>(
         gm: &mut GameManager, 
         payment: u64, 
-        grids_amount:u64,
+        r: &Random,
+        base_amount:u64,
+        grids_reward:Coin<T>,
         init_colors:vector<String>,
         ctx: &mut TxContext
     ) {
@@ -76,26 +80,58 @@ module letscoloring::game{
         let mut grids = vector::empty<Grid>();
         let mut i = 0;
 
-        while (i < grids_amount) {
-            let grid = Grid {
-                index : i,
-                filled: false,
-                color: string::utf8(b"#FFFFFF"),
-                player:@hold
+        //calculate total grids
+        let grids_amount = base_amount * base_amount;
+
+        //Random calculation reward grid
+        let mut reward_grid_v = vector::empty<u64>();
+        let mut generator = random::new_generator(r,ctx);
+        while(reward_grid_v.length() < base_amount){
+            let index_r = random::generate_u64_in_range(&mut generator,0,grids_amount);
+            if(!vector::contains(&reward_grid_v,&index_r)){
+                vector::push_back(&mut reward_grid_v,index_r);
             };
+        };
+        //Random End
+
+
+        //get the balance and calculate the reward for the selected grid
+        let gird_balance = coin::into_balance<T>(grids_reward);
+        let gird_reward_balance = balance::value(&gird_balance)/base_amount;
+        
+
+        while (i < grids_amount) {
+
+            let mut grid = Grid {
+                    index : i,
+                    filled: false,
+                    color: string::utf8(b"#FFFFFF"),
+                    player:@hold,
+                    reward: 0,
+            };
+
+            //check if the index of grid is match the rule
+            if(vector::contains(&reward_grid_v,&i)){
+               grid.reward = gird_reward_balance;
+            };
+            
             vector::push_back(&mut grids, grid);
             i = i + 1;
         };
-        
-       let game = Game{
+
+
+        let game = Game{
             id: object::new(ctx),
             payment: payment,
             cnt: grids_amount,
             init_colors,
             grids: grids,
             total_reward: balance::zero<T>(),
+            grid_reward:gird_balance,
             reward_by_player:table::new(ctx),
         };
+        
+
 
         gm.game_count = gm.game_count + 1;
         table_vec::push_back<ID>(&mut gm.games, object::id(&game));
@@ -144,13 +180,30 @@ module letscoloring::game{
         game.cnt = game.cnt - 1;
         let grid_bm = borrow_mut_grid(game, index);
         assert!(!get_grid_filled(grid_bm), EGridAlreadyFilled);
-        
+
         set_grid_filled(grid_bm);
         set_grid_color(grid_bm, new_color);
+        set_grid_player(grid_bm,sender);
+        
 
+        if(grid_bm.reward>0){
+            table::add(&mut game.reward_by_player,sender,grid_bm.reward);
+        };
+        
+        
         let game_coin = coin::split(token, game.payment, ctx);
-        balance::join<T>(&mut game.total_reward, coin::into_balance(game_coin));
+        balance::join<T>(&mut game.total_reward, coin::into_balance(game_coin)); 
+
     }
+
+    // #[allow(lint(self_transfer))]
+    // public fun claim_grid_reward<T>(game:&mut Game<T>,grid:&Grid,ctx:&mut TxContext){
+    //     let sender = ctx.sender();
+    //     if(grid.reward>0 && grid.player == sender){
+    //         let coin = coin::take(&mut game.grid_reward,grid.reward,ctx);
+    //         transfer::public_transfer(coin,sender);
+    //     }
+    // }
 
     public fun borrow_grid<T>(game: &Game<T>, index:u64): &Grid {
         assert!(index < game.init_colors.length(), EOutOfRange);
@@ -174,6 +227,10 @@ module letscoloring::game{
 
     fun set_grid_filled(grid: &mut Grid) {
         grid.filled = true;
+    }
+
+    fun set_grid_player(grid:&mut Grid,player:address){
+        grid.player = player;
     }
 
     fun set_grid_color(grid: &mut Grid, color: String) {
