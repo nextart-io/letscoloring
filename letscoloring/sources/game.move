@@ -179,6 +179,7 @@ module letscoloring::game{
         assert!(game.cnt > 0, EGameEnded);
         game.cnt = game.cnt - 1;
         let grid_bm = borrow_mut_grid(game, index);
+        let reward = grid_bm.reward;
         assert!(!get_grid_filled(grid_bm), EGridAlreadyFilled);
 
         set_grid_filled(grid_bm);
@@ -186,8 +187,8 @@ module letscoloring::game{
         set_grid_player(grid_bm,sender);
         
 
-        if(grid_bm.reward>0){
-            table::add(&mut game.reward_by_player,sender,grid_bm.reward);
+        if(grid_bm.reward > 0){
+            table::add(&mut game.reward_by_player,sender,reward);
         };
         
         
@@ -196,14 +197,6 @@ module letscoloring::game{
 
     }
 
-    // #[allow(lint(self_transfer))]
-    // public fun claim_grid_reward<T>(game:&mut Game<T>,grid:&Grid,ctx:&mut TxContext){
-    //     let sender = ctx.sender();
-    //     if(grid.reward>0 && grid.player == sender){
-    //         let coin = coin::take(&mut game.grid_reward,grid.reward,ctx);
-    //         transfer::public_transfer(coin,sender);
-    //     }
-    // }
 
     public fun borrow_grid<T>(game: &Game<T>, index:u64): &Grid {
         assert!(index < game.init_colors.length(), EOutOfRange);
