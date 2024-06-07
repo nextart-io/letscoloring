@@ -6,6 +6,7 @@ module letscoloring::ticket{
     use sui::table::{Self,Table};
 
     const ENotExsist:u64 = 0;
+    const ENotValidateUser:u64 = 1;
     
     public struct AdminCap has key,store{
         id:UID,
@@ -56,7 +57,9 @@ module letscoloring::ticket{
         transfer::transfer(ticket,recipient);
     }
     
-    public fun increase_points(_:&AdminCap,ticket:&mut Ticket,amount:u64){
+    public(package) fun increase_points(table:&Table_UserTicket,ticket:&mut Ticket,amount:u64,sender:address){
+        let value = table::borrow(&table.data,sender);
+        assert!(value == object::id(ticket), ENotValidateUser);
         ticket.points = ticket.points + amount;
     }
 

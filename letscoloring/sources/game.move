@@ -6,6 +6,7 @@ module letscoloring::game{
     use sui::table_vec::{Self, TableVec};
     use sui::event;
     use sui::random::{Self,Random};
+    use sui::vec_map::{Self};
     use letscoloring::ticket::{Table_UserTicket,Ticket,Self};
     
     
@@ -33,7 +34,6 @@ module letscoloring::game{
 
     public struct GameManager has key, store {
         id: UID,
-        game_count: u64,
         games: TableVec<ID>,
     }
 
@@ -59,7 +59,6 @@ module letscoloring::game{
     fun init(ctx: &mut TxContext) {
         let gm = GameManager {
             id: object::new(ctx),
-            game_count: 0,
             games: table_vec::empty<ID>(ctx),
         };
 
@@ -131,9 +130,6 @@ module letscoloring::game{
             reward_by_player:table::new(ctx),
         };
         
-
-
-        gm.game_count = gm.game_count + 1;
         table_vec::push_back<ID>(&mut gm.games, object::id(&game));
         event::emit(GameCreateEvent{
             game_address:object::uid_to_address(&game.id),
@@ -228,6 +224,36 @@ module letscoloring::game{
 
     fun set_grid_color(grid: &mut Grid, color: String) {
         grid.color = color;
+    }
+
+    public fun settlement<T>(game:&mut Game<T>, ctx:&mut TxContext){
+        assert!(game.cnt == 0 ,ENotEnd);
+        let mut color_table = vec_map::empty<String,u64>();
+        let mut i = 0;
+        while(i < game.grids.length()){
+            if(color_table.contains(&game.grids[i].color)){
+                let item_b = color_table.get_mut(&game.grids[i].color);
+                *item_b = *item_b + 1;    
+            }else{
+                color_table.insert(game.grids[i].color,0);
+            };
+
+            i = i + 1;
+        };
+        let init_color = &game.grids[0].color;
+        let mut max_color = copy init_color;
+        let mut min_color = copy init_color;
+        i = 0;
+        while(i < color_table.size()){
+            let (key,value) = color_table.get_entry_by_idx(i);
+            if(*color_table.get(max_color) < *value){
+                max_color = key;
+            };
+            if( *value > 0 && *color_table.get(min_color) > *value){
+                min_color = key;
+            };
+            i = i + 1;
+        };
     }
 
 
@@ -395,16 +421,16 @@ module letscoloring::game{
     //     };
     // }
 
-    // #[allow(lint(self_transfer))]
-    // public fun claim_reward<T>(game: &mut Game<T>, ctx:&mut TxContext){
-    //     let sender = ctx.sender();
-    //     assert!(table::contains(&game.reward_by_player,sender),ENotQualified);
-    //     let bm_balance = *table::borrow_mut(&mut game.reward_by_player,sender);
-    //     let reward = coin::take<T>(&mut game.total_reward, bm_balance, ctx);
-        
-    //     //let reward = coin::from_balance(bm_balance,ctx);
-    //     transfer::public_transfer(reward,sender);
-    // }
+    #[allow(lint(self_transfer))]
+    public fun claim_reward<T>(game: &mut Game<T>,userTicket:&Table_UserTicket, t:&mut Ticket, ctx:&mut TxContext){
+        let sender = ctx.sender();
+        assert!(table::contains(&game.reward_by_player,sender),ENotQualified);
+        let bm_balance = *table::borrow_mut(&mut game.reward_by_player,sender);
+        let reward = coin::take<T>(&mut game.total_reward, bm_balance, ctx);
+
+        ticket::increase_points(userTicket,t,bm_balance,sender);
+        transfer::public_transfer(reward,sender);
+    }
 
 
     //test
