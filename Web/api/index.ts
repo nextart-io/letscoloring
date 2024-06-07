@@ -91,11 +91,14 @@ export const getLastGameId = async (client: SuiClient) => {
       parentId: `${table_object_id}`,
     }
   )
-  const total_games = data.data.map((game) => {
-    return game.objectId
-  });
+
+
+  const total_games = data.data
+  .sort((a, b) => (a.name.value as number) - (b.name.value as number))
+  .map((game) => game.objectId);
 
   if(!total_games.length) return;
+
 
   const last_game_object = await client.getObject({
     id:total_games.at(-1)!,
@@ -103,6 +106,7 @@ export const getLastGameId = async (client: SuiClient) => {
       showContent:true
     }
   })
+
 
   const last_game_object_content = last_game_object.data?.content as any;
   const last_game_id = last_game_object_content.fields.value;
