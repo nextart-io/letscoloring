@@ -228,32 +228,37 @@ module letscoloring::game{
 
     public fun settlement<T>(game:&mut Game<T>, ctx:&mut TxContext){
         assert!(game.cnt == 0 ,ENotEnd);
+//key for color, value for count of filled
         let mut color_table = vec_map::empty<String,u64>();
         let mut i = 0;
         while(i < game.grids.length()){
-            if(color_table.contains(&game.grids[i].color)){
-                let item_b = color_table.get_mut(&game.grids[i].color);
+            let color = &game.grids[i].color;
+            if(color_table.contains(color)){
+                let item_b = color_table.get_mut(color);
                 *item_b = *item_b + 1;    
             }else{
-                color_table.insert(game.grids[i].color,0);
+                color_table.insert(*color,0);
             };
 
             i = i + 1;
         };
-        let init_color = &game.grids[0].color;
-        let mut max_color = copy init_color;
-        let mut min_color = copy init_color;
+
+//sort value_vector so that we can get the max and the min color by sorted vector: larger to smaller 
+        let (mut key_v, mut value_v) = color_table.into_keys_values();
         i = 0;
-        while(i < color_table.size()){
-            let (key,value) = color_table.get_entry_by_idx(i);
-            if(*color_table.get(max_color) < *value){
-                max_color = key;
-            };
-            if( *value > 0 && *color_table.get(min_color) > *value){
-                min_color = key;
-            };
+        let size = color_table.size();
+        while(i < size - 1){
+            let mut j = 0;
+            while(j < size - 1 - i) {
+                if(value_v[j] < value_v[j + 1]){
+                    key_v.swap(j,j+1);
+                    value_v.swap(j,j+1);
+                };
+                
+                j = j + 1;
+            };        
             i = i + 1;
-        };
+        }
     }
 
 
